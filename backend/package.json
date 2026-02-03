@@ -1,0 +1,48 @@
+{
+  "name": "taskco-backend",
+  "version": "1.0.0",
+  "description": "Taskco API - Auth, Profile, Tasks CRUD with OAuth, ImageKit, RabbitMQ",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "test": "NODE_ENV=test jest --coverage --forceExit",
+    "test:watch": "NODE_ENV=test jest --watch --forceExit",
+    "lint": "eslint src/"
+  },
+  "keywords": ["express", "mongodb", "jwt", "oauth", "rabbitmq", "imagekit"],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "amqplib": "^0.10.3",
+    "argon2": "^0.31.2",
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-rate-limit": "^7.1.5",
+    "express-validator": "^7.0.1",
+    "helmet": "^7.1.0",
+    "imagekit": "^2.0.1",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.0.3",
+    "morgan": "^1.10.0",
+    "multer": "^1.4.5-lts.1",
+    "nodemailer": "^6.9.7",
+    "passport": "^0.7.0",
+    "passport-github2": "^0.1.12",
+    "passport-google-oauth20": "^2.0.0",
+    "validator": "^13.11.0",
+    "winston": "^3.11.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.56.0",
+    "jest": "^29.7.0",
+    "nodemon": "^3.0.2",
+    "supertest": "^6.3.3"
+  }
+}

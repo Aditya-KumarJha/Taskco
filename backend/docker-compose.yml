@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  backend:
+    build: .
+    ports:
+      - "${PORT:-3000}:3000"
+    env_file: .env
+    environment:
+      - NODE_ENV=production
+      - MONGODB_URI=${MONGODB_URI}
+      - JWT_SECRET=${JWT_SECRET}
+      - FRONTEND_URL=${FRONTEND_URL}
+      - BACKEND_URL=${BACKEND_URL}
+      - RABBITMQ_URL=${RABBITMQ_URL}
+    restart: unless-stopped
+    depends_on: []
+
+  # Optional: local MongoDB for dev (use MONGODB_URI=mongodb://mongo:27017/taskco)
+  # mongo:
+  #   image: mongo:7
+  #   ports:
+  #     - "27017:27017"
+  #   volumes:
+  #     - mongo_data:/data/db
+  #   restart: unless-stopped
+
+# volumes:
+#   mongo_data:
