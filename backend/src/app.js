@@ -41,7 +41,7 @@ app.use(generalLimiter);
 
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
-app.get('/health', (req, res) => {
+app.get('/', (req, res) => {
   res.json({ success: true, message: 'OK', timestamp: new Date().toISOString() });
 });
 

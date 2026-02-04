@@ -1,5 +1,8 @@
 import { useEffect, useRef } from "react";
 import { Routes, Route, useLocation, useNavigate } from "react-router-dom";
+import { useSelector, useDispatch } from "react-redux";
+import { toast } from "react-toastify";
+
 import NavBar from "./components/Navbar";
 import Home from "./pages/Home";
 import CreateTaskPage from "./pages/CreateTaskPage";
@@ -8,14 +11,14 @@ import TaskPage from "./pages/TaskPage";
 import NotificationPage from "./pages/NotificationPage";
 import SignupPage from "./pages/SignupPage";
 import LoginPage from "./pages/LoginPage";
-import { useSelector, useDispatch } from "react-redux";
+
 import { verifySession } from "./store/authSlice";
-import { toast } from "react-toastify";
 
 function App() {
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
+
   const auth = useSelector((state) => state.auth);
   const prevAuthRef = useRef(auth.isAuthenticated);
 
@@ -27,59 +30,64 @@ function App() {
     if (!auth.checked) return;
 
     const initiated = localStorage.getItem("auth_initiated");
+
     if (initiated) {
+      const action = initiated.startsWith("social:")
+        ? initiated.split(":")[1]
+        : "login";
+
       if (auth.isAuthenticated && !prevAuthRef.current) {
-        let action = "login";
-        if (initiated.startsWith?.("social:")) {
-          const parts = initiated.split(":");
-          action = parts[1] || "login";
-        }
-        toast.success(action === "signup" ? "Signup successful! Welcome to Taskco" : "Login successful! Welcome back");
-        localStorage.removeItem("auth_initiated");
-      } else if (!auth.isAuthenticated && !prevAuthRef.current) {
-        let action = "login";
-        if (initiated.startsWith?.("social:")) {
-          const parts = initiated.split(":");
-          action = parts[1] || "login";
-        }
-        toast.error(
-          (action === "signup" ? "Signup failed" : "Login failed") +
-            ". Please try again."
+        toast.success(
+          action === "signup"
+            ? "Signup successful! Welcome to Taskco"
+            : "Login successful! Welcome back"
         );
-        localStorage.removeItem("auth_initiated");
       }
+
+      if (!auth.isAuthenticated && !prevAuthRef.current) {
+        toast.error(
+          action === "signup"
+            ? "Signup failed. Please try again."
+            : "Login failed. Please try again."
+        );
+      }
+
+      localStorage.removeItem("auth_initiated");
     }
 
     prevAuthRef.current = auth.isAuthenticated;
 
-    const publicPaths = ["/", "/features", "/about", "/contact", "/login", "/signup"];
-    const current = location.pathname;
+    const publicPaths = ["/login", "/signup"];
+    const currentPath = location.pathname;
+
     const isPublic = publicPaths.some(
-      (p) => current === p || current.startsWith(p + "/")
+      (p) => currentPath === p || currentPath.startsWith(p + "/")
     );
 
     if (!isPublic && !auth.isAuthenticated) {
-      navigate("/login", { replace: true, state: { from: current } });
+      navigate("/login", {
+        replace: true,
+        state: { from: currentPath },
+      });
     }
-  }, [location, navigate, auth.isAuthenticated, auth.checked]);
+  }, [location.pathname, auth.isAuthenticated, auth.checked, navigate]);
 
   const hideHeaderPaths = ["/login", "/signup"];
-  const shouldShowNav = !hideHeaderPaths.some(
-    (p) => location.pathname === p || location.pathname.startsWith(p + "/")
-  );
+  const shouldShowNav = !hideHeaderPaths.includes(location.pathname);
 
   return (
     <>
       {shouldShowNav && <NavBar />}
 
       <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<SignupPage />} />
+
         <Route path="/" element={<Home />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/tasks" element={<TaskPage />} />
         <Route path="/create-task" element={<CreateTaskPage />} />
         <Route path="/notifications" element={<NotificationPage />} />
-        <Route path="/signup" element={<SignupPage />} />
-        <Route path="/login" element={<LoginPage />} />
       </Routes>
     </>
   );
