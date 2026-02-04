@@ -19,8 +19,13 @@ if (process.env.EMAIL_USER) {
   });
   transporter.verify((err) => {
     if (err) {
-      logger.error('Email server verify error:', err.message);
-      logger.error('Full error:', JSON.stringify(err, null, 2));
+      logger.error('Email server verify error:', err.message || 'Unknown error');
+      logger.error('Error code:', err.code);
+      logger.error('Error command:', err.command);
+      if (err.response) {
+        logger.error('SMTP Response:', err.response);
+      }
+      logger.error('Stack:', err.stack);
     } else {
       logger.info('Email server ready');
     }
