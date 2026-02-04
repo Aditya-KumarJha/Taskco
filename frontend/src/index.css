@@ -48,7 +48,27 @@ body {
   }
 
   .floating-nav {
-    @apply bg-black rounded-lg border;
+    @apply bg-black rounded-lg border border-white/20 text-white;
+  }
+
+  .floating-nav .nav-hover-btn {
+    @apply text-white;
+  }
+
+  .floating-nav .nav-hover-btn svg {
+    @apply text-white;
+  }
+
+  .floating-nav #dashboard-button {
+    @apply bg-transparent text-white;
+  }
+
+  .floating-nav .indicator-line {
+    @apply bg-white/80;
+  }
+
+  .floating-nav .nav-hover-btn::after {
+    background-color: rgba(255,255,255,0.9);
   }
 
   .absolute-center {

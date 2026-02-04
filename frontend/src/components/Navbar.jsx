@@ -2,13 +2,27 @@ import clsx from "clsx";
 import gsap from "gsap";
 import { useWindowScroll } from "react-use";
 import { useEffect, useRef, useState } from "react";
-import { TiLocationArrow } from "react-icons/ti";
-import { HiMenuAlt3, HiX } from "react-icons/hi";
 import { Link } from "react-router-dom";
+import {
+  Home,
+  PlusCircle,
+  ListTodo,
+  LayoutDashboard,
+  Bell,
+} from "lucide-react";
+import { HiMenuAlt3, HiX } from "react-icons/hi";
+import { TiLocationArrow } from "react-icons/ti";
+import { useNavigate } from "react-router-dom";
 
 import Button from "./ui/Button";
 
-const navItems = ["Home", "Features", "Dashboard", "About", "Contact"];
+const navItems = [
+  { label: "Home", path: "/", icon: Home },
+  { label: "Create Task", path: "/tasks/create", icon: PlusCircle },
+  { label: "View Tasks", path: "/tasks", icon: ListTodo },
+  { label: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
+  { label: "Notification", path: "/notification", icon: Bell },
+];
 
 const NavBar = () => {
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
@@ -27,22 +41,24 @@ const NavBar = () => {
     setIsIndicatorActive((prev) => !prev);
   };
 
+  const navigate = useNavigate();
+
   useEffect(() => {
-    if (isAudioPlaying) {
-      audioElementRef.current.play();
-    } else {
-      audioElementRef.current.pause();
-    }
+    if (!audioElementRef.current) return;
+    if (isAudioPlaying) audioElementRef.current.play();
+    else audioElementRef.current.pause();
   }, [isAudioPlaying]);
 
   useEffect(() => {
+    if (!navContainerRef.current) return;
+
     if (currentScrollY === 0) {
       setIsNavVisible(true);
       navContainerRef.current.classList.remove("floating-nav");
     } else if (currentScrollY > lastScrollY) {
       setIsNavVisible(false);
       navContainerRef.current.classList.add("floating-nav");
-    } else if (currentScrollY < lastScrollY) {
+    } else {
       setIsNavVisible(true);
       navContainerRef.current.classList.add("floating-nav");
     }
@@ -51,6 +67,7 @@ const NavBar = () => {
   }, [currentScrollY, lastScrollY]);
 
   useEffect(() => {
+    if (!navContainerRef.current) return;
     gsap.to(navContainerRef.current, {
       y: isNavVisible ? 0 : -100,
       opacity: isNavVisible ? 1 : 0,
@@ -66,31 +83,32 @@ const NavBar = () => {
       <header className="absolute top-1/2 w-full -translate-y-1/2">
         <nav className="flex size-full items-center justify-between p-4">
           <div className="flex items-center gap-7">
-            <img src="/img/logo.png" alt="logo" className="w-20" />
+            <Link to="/">
+              <img src="/img/logo.png" alt="logo" className="w-20 cursor-pointer" />
+            </Link>
 
             <Button
               id="dashboard-button"
               title="Dashboard"
               rightIcon={<TiLocationArrow />}
               containerClass="bg-blue-50 text-black md:flex hidden items-center justify-center gap-1"
+              to="/dashboard"
+              onClick={() => navigate("/dashboard")}
             />
           </div>
 
           <div className="flex items-center">
-            <div className="hidden md:block">
-              {navItems.map((item, index) => {
-                const path =
-                  item.toLowerCase() === "home" ? "/" : `/${item.toLowerCase()}`;
-                return (
-                  <Link
-                    key={index}
-                    to={path}
-                    className="nav-hover-btn text-black"
-                  >
-                    {item}
-                  </Link>
-                );
-              })}
+            <div className="hidden md:flex items-center gap-6">
+              {navItems.map(({ label, path, icon: Icon }) => (
+                <Link
+                  key={label}
+                  to={path}
+                  className="nav-hover-btn text-black flex items-center gap-2"
+                >
+                  <Icon size={18} />
+                  <span>{label}</span>
+                </Link>
+              ))}
             </div>
 
             <button
@@ -126,22 +144,17 @@ const NavBar = () => {
         {isMobileMenuOpen && (
           <div className="absolute left-0 top-full mt-2 w-full rounded-lg bg-transparent p-6 backdrop-blur-md md:hidden">
             <div className="flex flex-col gap-4">
-              {navItems.map((item, index) => {
-                const path =
-                  item.toLowerCase() === "home"
-                    ? "/"
-                    : `/${item.toLowerCase()}`;
-                return (
-                  <Link
-                    key={index}
-                    to={path}
-                    className="text-black text-lg"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    {item}
-                  </Link>
-                );
-              })}
+              {navItems.map(({ label, path, icon: Icon }) => (
+                <Link
+                  key={label}
+                  to={path}
+                  className="text-black text-lg flex items-center gap-3"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <Icon size={20} />
+                  <span>{label}</span>
+                </Link>
+              ))}
             </div>
           </div>
         )}

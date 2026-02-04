@@ -3,6 +3,11 @@ import { useGSAP } from "@gsap/react";
 import { ScrollTrigger } from "gsap/all";
 import { TiLocationArrow } from "react-icons/ti";
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from 'react-redux';
+import api from '../utils/api';
+import { setLoggedOut } from '../store/authSlice';
+import { toast } from 'react-toastify';
 
 import Button from "./ui/Button";
 import VideoPreview from "./ui/VideoPreview";
@@ -80,6 +85,19 @@ const Hero = () => {
   });
 
   const getVideoSrc = (index) => `videos/hero-${index}.mp4`;
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const isAuthenticated = useSelector((s) => s.auth?.isAuthenticated);
+
+  const handleLogout = async () => {
+    try {
+      await api.post('/api/v1/auth/logout');
+    } catch (e) {
+    }
+    dispatch(setLoggedOut());
+    toast.success('Logout successful');
+    navigate('/');
+  };
 
   return (
     <div className="relative h-dvh w-screen overflow-x-hidden">
@@ -154,9 +172,10 @@ const Hero = () => {
 
             <Button
               id="get-started-button"
-              title="Go to Dashboard"
+              title={isAuthenticated ? 'Log out' : 'Get started'}
               leftIcon={<TiLocationArrow />}
-              containerClass="bg-yellow-300 flex-center gap-1"
+              containerClass={isAuthenticated ? 'bg-red-500 text-white flex-center gap-1' : 'bg-yellow-300 flex-center gap-1'}
+              onClick={() => (isAuthenticated ? handleLogout() : navigate('/signup'))}
             />
           </div>
         </div>

@@ -20,7 +20,12 @@ export const registerUserValidations = [
     .optional()
     .custom((value) => {
       if (value == null) return true;
-      if (typeof value !== 'object') throw new Error('fullName must be an object');
+      // Accept both string and object format
+      if (typeof value === 'string') {
+        if (!value.trim()) throw new Error('fullName must be a non-empty string');
+        return true;
+      }
+      if (typeof value !== 'object') throw new Error('fullName must be a string or object');
       if (value.firstName !== undefined && (typeof value.firstName !== 'string' || !value.firstName.trim())) {
         throw new Error('firstName must be a non-empty string');
       }
