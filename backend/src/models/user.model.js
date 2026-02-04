@@ -1,47 +1,77 @@
 import mongoose from 'mongoose';
-import validator from 'validator';
 
 const userSchema = new mongoose.Schema(
   {
+    fullName: {
+      firstName: {
+        type: String,
+        trim: true,
+        default: '',
+      },
+      lastName: {
+        type: String,
+        trim: true,
+        default: '',
+      },
+    },
+
+    username: {
+      type: String,
+      unique: true,
+      sparse: true,
+      trim: true,
+    },
+
     email: {
       type: String,
-      required: [true, 'Email is required'],
+      required: true,
       unique: true,
       lowercase: true,
       trim: true,
-      validate: [validator.isEmail, 'Invalid email'],
     },
+
     password: {
       type: String,
-      minlength: [8, 'Password must be at least 8 characters'],
+      minlength: 6,
       select: false,
     },
-    name: {
+
+    googleId: {
       type: String,
-      trim: true,
+      unique: true,
+      sparse: true,
+    },
+
+    githubId: {
+      type: String,
+      unique: true,
+      sparse: true,
+    },
+
+    provider: {
+      type: String,
+      enum: ['email', 'google', 'github'],
+      default: 'email',
+    },
+
+    profilePic: {
+      type: String,
       default: '',
     },
-    avatar: {
-      type: String,
-      default: null,
+
+    otp: {
+      code: String,
+      expiresAt: Date,
     },
-    isEmailVerified: {
+
+    isVerified: {
       type: Boolean,
       default: false,
     },
-    googleId: { type: String, sparse: true },
-    githubId: { type: String, sparse: true },
   },
   {
     timestamps: true,
-    toJSON: { virtuals: true },
-    toObject: { virtuals: true },
   }
 );
 
-userSchema.index({ email: 1 });
-userSchema.index({ googleId: 1 }, { sparse: true });
-userSchema.index({ githubId: 1 }, { sparse: true });
-
-const User = mongoose.model('User', userSchema);
-export default User;
+export default mongoose.model('User', userSchema);

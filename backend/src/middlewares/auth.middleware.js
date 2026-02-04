@@ -1,6 +1,5 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/user.model.js';
-import { env } from '../config/env.js';
 import { Unauthorized } from '../utils/ApiError.js';
 
 export const protect = async (req, res, next) => {
@@ -11,12 +10,15 @@ export const protect = async (req, res, next) => {
       token = authHeader.slice(7);
     } else if (req.cookies?.accessToken) {
       token = req.cookies.accessToken;
+    } else if (req.cookies?.token) {
+      token = req.cookies.token;
     }
     if (!token) {
       throw Unauthorized('Access token required. Please log in.');
     }
-    const decoded = jwt.verify(token, env.JWT_SECRET);
-    const user = await User.findById(decoded.sub).select('-password');
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.id || decoded.sub;
+    const user = await User.findById(userId).select('-password');
     if (!user) {
       throw Unauthorized('User not found. Token may be invalid.');
     }
@@ -41,12 +43,15 @@ export const optionalAuth = async (req, res, next) => {
       token = authHeader.slice(7);
     } else if (req.cookies?.accessToken) {
       token = req.cookies.accessToken;
+    } else if (req.cookies?.token) {
+      token = req.cookies.token;
     }
     if (!token) {
       return next();
     }
-    const decoded = jwt.verify(token, env.JWT_SECRET);
-    const user = await User.findById(decoded.sub).select('-password');
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.id || decoded.sub;
+    const user = await User.findById(userId).select('-password');
     if (user) req.user = user;
     next();
   } catch {
@@ -60,8 +65,9 @@ export const refreshAuth = async (req, res, next) => {
     if (!refreshToken) {
       throw Unauthorized('Refresh token required.');
     }
-    const decoded = jwt.verify(refreshToken, env.JWT_REFRESH_SECRET);
-    const user = await User.findById(decoded.sub).select('-password');
+    const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+    const userId = decoded.id || decoded.sub;
+    const user = await User.findById(userId).select('-password');
     if (!user) {
       throw Unauthorized('User not found.');
     }
@@ -75,4 +81,5 @@ export const refreshAuth = async (req, res, next) => {
   }
 };
 
+export const authMiddleware = protect;
 export default protect;

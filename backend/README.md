@@ -11,12 +11,27 @@ npm install
 npm run dev
 ```
 
+### Seed Sample Data (Optional)
+
+Populate database with test users, tasks, and notifications:
+
+```bash
+npm run seed
+```
+
+This creates 5 test users with login credentials. See [SEEDING.md](./SEEDING.md) for details.
+
+**Test Login:**
+- Email: `john.doe@example.com`
+- Password: `Password123`
+
 ## Scripts
 
 - `npm run dev` — Start with nodemon
 - `npm start` — Start production server
 - `npm test` — Run tests with coverage
 - `npm run lint` — Run ESLint
+- `npm run seed` — Seed database with sample data (see [SEEDING.md](./SEEDING.md))
 
 ## API (v1)
 

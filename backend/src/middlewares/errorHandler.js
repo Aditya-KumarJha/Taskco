@@ -1,6 +1,5 @@
 import { ApiError } from '../utils/ApiError.js';
 import { logger } from '../utils/logger.js';
-import { env } from '../config/env.js';
 
 export const errorHandler = (err, req, res, next) => {
   let statusCode = err.statusCode || 500;
@@ -39,7 +38,7 @@ export const errorHandler = (err, req, res, next) => {
     ...(errors && { errors }),
   };
 
-  if (env.NODE_ENV === 'development' && statusCode === 500) {
+  if (process.env.NODE_ENV === 'development' && statusCode === 500) {
     response.stack = err.stack;
   }
 

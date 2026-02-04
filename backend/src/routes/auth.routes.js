@@ -1,57 +1,126 @@
 import { Router } from 'express';
-import * as authController from '../controllers/auth.controller.js';
-import { validate } from '../middlewares/validate.js';
-import { protect, refreshAuth } from '../middlewares/auth.js';
-import { authLimiter } from '../middlewares/rateLimiter.js';
-import {
-  signupValidation,
-  loginValidation,
-  refreshValidation,
-} from '../validations/authValidation.js';
 import passport from '../config/passport.js';
-import { Unauthorized } from '../utils/ApiError.js';
+import {
+	registerUser,
+	verifyRegisterOTP,
+	resendOTP,
+	loginUser,
+	verifyLoginOTP,
+	oauthCallback,
+	forgotPassword,
+	verifyForgotPasswordOTP,
+	resetPassword,
+	logout,
+  getCurrentUser
+} from '../controllers/auth.controller.js';
+import {
+	registerUserValidations,
+	verifyOTPValidations,
+	resendOTPValidations,
+	loginUserValidations,
+	verifyLoginOTPValidations,
+	forgotPasswordValidations,
+	verifyForgotPasswordOTPValidations,
+	resetPasswordValidations,
+} from '../validations/auth.validator.js';
+import { authMiddleware } from '../middlewares/auth.middleware.js';
+import { get } from 'mongoose';
 
 const router = Router();
 
-router.use(authLimiter);
+// Registration Flow
+router.post('/register', registerUserValidations, registerUser);
 
-router.post('/signup', signupValidation, validate, authController.signup);
-router.post('/login', loginValidation, validate, authController.login);
-router.post('/refresh', refreshValidation, validate, refreshAuth, authController.refresh);
-router.post('/logout', authController.logout);
+router.post('/verify-register-otp', verifyOTPValidations, verifyRegisterOTP);
 
-router.get(
-  '/google',
-  passport.authenticate('google', { session: false, scope: ['profile', 'email'] })
+router.post('/resend-otp', resendOTPValidations, resendOTP);
+
+// Login Flow
+router.post('/login', loginUserValidations, loginUser);
+
+router.post('/verify-login-otp', verifyLoginOTPValidations, verifyLoginOTP);
+
+// Forgot Password Flow
+router.post('/forgot-password', forgotPasswordValidations, forgotPassword);
+
+router.post('/verify-forgot-password-otp', verifyForgotPasswordOTPValidations, verifyForgotPasswordOTP);
+
+router.post('/reset-password', resetPasswordValidations, resetPassword);
+
+router.get('/google',
+  passport.authenticate('google', {
+    scope: ['profile', 'email'],
+    prompt: 'select_account',
+    state: 'login',
+  })
+);
+router.get('/google/signup',
+  passport.authenticate('google', {
+    scope: ['profile', 'email'],
+    prompt: 'select_account',
+    state: 'signup',
+  })
 );
 router.get(
   '/google/callback',
   (req, res, next) => {
-    passport.authenticate('google', { session: false }, (err, user) => {
+    passport.authenticate('google', { session: false }, (err, user, info) => {
       if (err) return next(err);
-      if (!user) return next(Unauthorized('Google sign-in failed'));
+      if (!user) return res.redirect(`${process.env.FRONTEND_URL || '/'}/login?error=${encodeURIComponent(info?.message || 'Google sign-in failed')}`);
       req.user = user;
+      req.authInfo = info || {};
       next();
     })(req, res, next);
   },
-  authController.googleCallback
+  oauthCallback('google')
 );
 
-router.get(
-  '/github',
-  passport.authenticate('github', { session: false, scope: ['user:email'] })
+router.get('/github',
+  passport.authenticate('github', {
+    scope: ['user:email'],
+    state: 'login',
+  })
+);
+router.get('/github/signup',
+  passport.authenticate('github', {
+    scope: ['user:email'],
+    state: 'signup',
+  })
 );
 router.get(
   '/github/callback',
   (req, res, next) => {
-    passport.authenticate('github', { session: false }, (err, user) => {
+    passport.authenticate('github', { session: false }, (err, user, info) => {
       if (err) return next(err);
-      if (!user) return next(Unauthorized('GitHub sign-in failed'));
+      if (!user) return res.redirect(`${process.env.FRONTEND_URL || '/'}/login?error=${encodeURIComponent(info?.message || 'GitHub sign-in failed')}`);
       req.user = user;
+      req.authInfo = info || {};
       next();
     })(req, res, next);
   },
-  authController.githubCallback
+  oauthCallback('github')
 );
+
+router.get('/oauth-failure', (req, res) => {
+  const frontend = process.env.FRONTEND_URL || 'http://localhost:5173';
+  const provider = (req.query.provider || '').toLowerCase();
+  let message = req.query.error || 'OAuth authentication failed';
+
+  if (provider === 'github') {
+    message =
+      'No GitHub account found for this user. If you registered using Google or email/password, try logging in with that method or sign up with GitHub.';
+  } else if (provider === 'google') {
+    message =
+      'No Google account found for this user. If you registered using GitHub or email/password, try logging in with that method or sign up with Google.';
+  }
+
+  return res.redirect(`${frontend}/login?error=${encodeURIComponent(message)}`);
+});
+
+// Logout
+router.post('/logout', logout);
+
+// Get Current User
+router.get('/me', authMiddleware, getCurrentUser);
 
 export default router;

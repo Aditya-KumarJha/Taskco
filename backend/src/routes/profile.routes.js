@@ -1,14 +1,17 @@
 import { Router } from 'express';
-import * as profileController from '../controllers/profile.controller.js';
-import { protect } from '../middlewares/auth.js';
-import { validate } from '../middlewares/validate.js';
-import { updateProfileValidation } from '../validations/profileValidation.js';
+import {
+  getProfile,
+  updateProfile,
+} from '../controllers/profile.controller.js';
+import { authMiddleware } from '../middlewares/auth.middleware.js';
+import { uploadSingle } from '../middlewares/upload.middleware.js';
+import updateProfileValidation, { normalizeFullName } from '../validations/profile.validatior.js';
 
 const router = Router();
 
-router.use(protect);
+router.use(authMiddleware);
 
-router.get('/me', profileController.getProfile);
-router.put('/me', updateProfileValidation, validate, profileController.updateProfile);
+router.get('/', getProfile);
+router.patch('/', uploadSingle, normalizeFullName, updateProfileValidation, updateProfile);
 
 export default router;

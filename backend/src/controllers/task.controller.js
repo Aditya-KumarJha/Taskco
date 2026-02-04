@@ -1,29 +1,52 @@
 import Task from '../models/task.model.js';
+import Notification from '../models/notification.model.js';
+import User from '../models/user.model.js';
+import { publishToQueue } from '../broker/broker.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { NotFound, Forbidden } from '../utils/ApiError.js';
-import { uploadFromPath, uploadFromBuffer, isImageKitEnabled } from '../services/imagekit.service.js';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+import { uploadFromBuffer, isImageKitEnabled } from '../services/imagekit.service.js';
 
 const checkOwnership = (task, userId) => {
   if (task.createdBy.toString() !== userId.toString()) {
-    throw new Forbidden('Not allowed to access this task');
+    throw Forbidden('Not allowed to access this task');
   }
 };
 
 export const createTask = asyncHandler(async (req, res) => {
-  const { title, description, status, priority, dueDate, imageUrl } = req.body;
+  const { title, description, status, priority, dueDate } = req.body;
+  
+  let imageUrl = null;
+  if (req.file && req.file.buffer) {
+    try {
+      if (isImageKitEnabled()) {
+        imageUrl = await uploadFromBuffer(req.file.buffer, req.file.originalname, 'tasks');
+      }
+    } catch (err) {
+    }
+  }
+  
   const task = await Task.create({
     title,
     description: description || '',
     status: status || 'todo',
     priority: priority || 'medium',
     dueDate: dueDate || null,
-    imageUrl: imageUrl || null,
+    imageUrl,
     createdBy: req.user._id,
+  });
+  const user = await User.findById(req.user._id).select('email fullName username').lean();
+  await Notification.create({
+    userId: req.user._id,
+    type: 'task_created',
+    title: 'Task created',
+    message: `Task "${task.title}" has been created.`,
+    data: { taskId: task._id, title: task.title },
+  });
+  await publishToQueue('TASK_NOTIFICATION.TASK_CREATED', {
+    email: user?.email,
+    fullName: user?.fullName,
+    username: user?.username,
+    taskTitle: task.title,
   });
   res.status(201).json({
     success: true,
@@ -70,7 +93,7 @@ export const listTasks = asyncHandler(async (req, res) => {
 
 export const getTask = asyncHandler(async (req, res) => {
   const task = await Task.findById(req.params.id);
-  if (!task) throw new NotFound('Task not found');
+  if (!task) throw NotFound('Task not found');
   checkOwnership(task, req.user._id);
   res.json({
     success: true,
@@ -80,21 +103,44 @@ export const getTask = asyncHandler(async (req, res) => {
 
 export const updateTask = asyncHandler(async (req, res) => {
   const task = await Task.findById(req.params.id);
-  if (!task) throw new NotFound('Task not found');
+  if (!task) throw NotFound('Task not found');
   checkOwnership(task, req.user._id);
 
-  const { title, description, status, priority, dueDate, imageUrl } = req.body;
+  const { title, description, status, priority, dueDate } = req.body;
   const updates = {};
   if (title !== undefined) updates.title = title;
   if (description !== undefined) updates.description = description;
   if (status !== undefined) updates.status = status;
   if (priority !== undefined) updates.priority = priority;
   if (dueDate !== undefined) updates.dueDate = dueDate;
-  if (imageUrl !== undefined) updates.imageUrl = imageUrl;
+  
+  if (req.file && req.file.buffer) {
+    try {
+      if (isImageKitEnabled()) {
+        updates.imageUrl = await uploadFromBuffer(req.file.buffer, req.file.originalname, 'tasks');
+      }
+    } catch (err) {
+      // Continue without image if upload fails
+    }
+  }
 
   const updated = await Task.findByIdAndUpdate(req.params.id, updates, {
     new: true,
     runValidators: true,
+  });
+  const user = await User.findById(req.user._id).select('email fullName username').lean();
+  await Notification.create({
+    userId: req.user._id,
+    type: 'task_updated',
+    title: 'Task updated',
+    message: `Task "${updated.title}" has been updated.`,
+    data: { taskId: updated._id, title: updated.title },
+  });
+  await publishToQueue('TASK_NOTIFICATION.TASK_UPDATED', {
+    email: user?.email,
+    fullName: user?.fullName,
+    username: user?.username,
+    taskTitle: updated.title,
   });
   res.json({
     success: true,
@@ -105,62 +151,31 @@ export const updateTask = asyncHandler(async (req, res) => {
 
 export const deleteTask = asyncHandler(async (req, res) => {
   const task = await Task.findById(req.params.id);
-  if (!task) throw new NotFound('Task not found');
+  if (!task) throw NotFound('Task not found');
   checkOwnership(task, req.user._id);
+  const title = task.title;
   await Task.findByIdAndDelete(req.params.id);
+  const user = await User.findById(req.user._id).select('email fullName username').lean();
+  await Notification.create({
+    userId: req.user._id,
+    type: 'task_deleted',
+    title: 'Task deleted',
+    message: `Task "${title}" has been deleted.`,
+    data: { taskId: task._id, title },
+  });
+  await publishToQueue('TASK_NOTIFICATION.TASK_DELETED', {
+    email: user?.email,
+    fullName: user?.fullName,
+    username: user?.username,
+    taskTitle: title,
+  });
   res.json({
     success: true,
     message: 'Task deleted successfully',
   });
 });
 
-export const uploadTaskImage = asyncHandler(async (req, res) => {
-  if (!req.file && !req.file?.path) {
-    return res.status(400).json({
-      success: false,
-      message: 'No image file provided',
-    });
-  }
-  const filePath = req.file.path;
-  let imageUrl;
-  if (isImageKitEnabled()) {
-    imageUrl = await uploadFromPath(filePath, 'tasks');
-  } else {
-    const host = req.get('host') || 'localhost:3000';
-    const protocol = req.protocol || 'http';
-    imageUrl = `${protocol}://${host}/uploads/${path.basename(filePath)}`;
-  }
-  res.json({
-    success: true,
-    data: { imageUrl },
-    message: 'Image uploaded. Use imageUrl in create/update task.',
-  });
-});
 
-export const uploadTaskImageBase64 = asyncHandler(async (req, res) => {
-  const { image } = req.body;
-  if (!image) {
-    return res.status(400).json({
-      success: false,
-      message: 'No image (base64) provided. Send { image: "data:image/...;base64,..." }',
-    });
-  }
-  const match = image.match(/^data:image\/(\w+);base64,(.+)$/);
-  if (!match) {
-    return res.status(400).json({
-      success: false,
-      message: 'Invalid base64 image format',
-    });
-  }
-  const buffer = Buffer.from(match[2], 'base64');
-  const ext = match[1] === 'jpeg' ? 'jpg' : match[1];
-  const imageUrl = await uploadFromBuffer(buffer, `img.${ext}`, 'tasks');
-  res.json({
-    success: true,
-    data: { imageUrl },
-    message: 'Image uploaded. Use imageUrl in create/update task.',
-  });
-});
 
 export default {
   createTask,
@@ -168,6 +183,4 @@ export default {
   getTask,
   updateTask,
   deleteTask,
-  uploadTaskImage,
-  uploadTaskImageBase64,
 };

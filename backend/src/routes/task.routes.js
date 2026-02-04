@@ -1,6 +1,12 @@
 import { Router } from 'express';
-import * as taskController from '../controllers/task.controller.js';
-import { protect } from '../middlewares/auth.js';
+import {
+  listTasks,
+  createTask,
+  getTask,
+  updateTask,
+  deleteTask,
+} from '../controllers/task.controller.js';
+import { authMiddleware } from '../middlewares/auth.middleware.js';
 import { validate } from '../middlewares/validate.js';
 import { singleImage } from '../middlewares/upload.js';
 import {
@@ -13,15 +19,13 @@ import {
 
 const router = Router();
 
-router.use(protect);
+router.use(authMiddleware);
 
-router.get('/', listTasksValidation, validate, taskController.listTasks);
-router.post('/', createTaskValidation, validate, taskController.createTask);
-router.post('/upload', singleImage, taskController.uploadTaskImage);
-router.post('/upload-base64', taskController.uploadTaskImageBase64);
+router.get('/', listTasksValidation, validate, listTasks);
+router.post('/', singleImage, createTaskValidation, validate, createTask);
 
-router.get('/:id', getTaskValidation, validate, taskController.getTask);
-router.put('/:id', updateTaskValidation, validate, taskController.updateTask);
-router.delete('/:id', deleteTaskValidation, validate, taskController.deleteTask);
+router.get('/:id', getTaskValidation, validate, getTask);
+router.patch('/:id', singleImage, updateTaskValidation, validate, updateTask);
+router.delete('/:id', deleteTaskValidation, validate, deleteTask);
 
 export default router;

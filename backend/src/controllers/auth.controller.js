@@ -1,103 +1,203 @@
-import * as authService from '../services/auth.service.js';
-import { sendWelcomeEmail } from '../services/mail.service.js';
+import {
+  registerUser as registerUserService,
+  verifyRegisterOTP as verifyRegisterOTPService,
+  generateToken,
+  getProfileUser,
+  resendOTPUser,
+  loginUser as loginUserService,
+  verifyLoginOTPUser,
+  forgotPasswordUser,
+  verifyForgotPasswordOTPUser,
+  resetPasswordUser,
+} from '../services/auth.service.js';
+import { publishToQueue } from '../broker/broker.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
-import { env } from '../config/env.js';
-import passport from '../config/passport.js';
-
-const setTokenCookies = (res, accessToken, refreshToken) => {
-  const isProduction = env.NODE_ENV === 'production';
-  const cookieOpts = {
+const setTokenCookie = (res, token) => {
+  res.cookie('token', token, {
     httpOnly: true,
-    secure: isProduction,
-    sameSite: isProduction ? 'strict' : 'lax',
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
     maxAge: 7 * 24 * 60 * 60 * 1000,
-  };
-  res.cookie('accessToken', accessToken, { ...cookieOpts, maxAge: 15 * 60 * 1000 });
-  res.cookie('refreshToken', refreshToken, cookieOpts);
+  });
 };
 
-export const signup = asyncHandler(async (req, res) => {
-  const { email, password, name } = req.body;
-  const result = await authService.signup(email, password, name);
-  setTokenCookies(res, result.accessToken, result.refreshToken);
-  await sendWelcomeEmail(result.user.email, result.user.name).catch(() => {});
-  res.status(201).json({
+export const registerUser = asyncHandler(async (req, res) => {
+  const { email, password, fullName, username, provider = 'email' } = req.body;
+  const { user, otpData } = await registerUserService({
+    email,
+    password,
+    fullName,
+    username,
+    provider,
+  });
+  await publishToQueue('AUTH_NOTIFICATION.REGISTER_OTP', {
+    email: user.email,
+    fullName: user.fullName,
+    username: user.username,
+    otpCode: otpData.code,
+  });
+  
+  const response = {
     success: true,
-    message: 'Account created successfully',
+    message: 'Registration successful. Please verify your email.',
+    data: process.env.NODE_ENV === 'test' ? { otp: otpData.code } : {},
+  };
+  
+  return res.status(201).json(response);
+});
+
+export const verifyRegisterOTP = asyncHandler(async (req, res) => {
+  const { email, otp } = req.body;
+  const user = await verifyRegisterOTPService(email, otp);
+  const token = generateToken(user._id, user.email, user.username);
+  setTokenCookie(res, token);
+  await publishToQueue('AUTH_NOTIFICATION.WELCOME_USER', {
+    email: user.email,
+    fullName: user.fullName,
+    username: user.username,
+  });
+  return res.status(200).json({
+    success: true,
+    message: 'Email verified successfully',
     data: {
-      user: result.user,
-      accessToken: result.accessToken,
-      refreshToken: result.refreshToken,
-      expiresIn: '15m',
+      user: getProfileUser(user),
+      accessToken: token,
     },
   });
 });
 
-export const login = asyncHandler(async (req, res) => {
-  const { email, password } = req.body;
-  const result = await authService.login(email, password);
-  setTokenCookies(res, result.accessToken, result.refreshToken);
-  res.json({
+export const resendOTP = asyncHandler(async (req, res) => {
+  const { email, username } = req.body;
+  const { user, otpData } = await resendOTPUser(email, username);
+  await publishToQueue('AUTH_NOTIFICATION.RESEND_OTP', {
+    email: user.email,
+    fullName: user.fullName,
+    username: user.username,
+    otpCode: otpData.code,
+  });
+  return res.status(200).json({
     success: true,
-    message: 'Logged in successfully',
-    data: {
-      user: result.user,
-      accessToken: result.accessToken,
-      refreshToken: result.refreshToken,
-      expiresIn: '15m',
-    },
+    message: 'OTP resent successfully',
   });
 });
 
-export const refresh = asyncHandler(async (req, res) => {
-  const refreshToken = req.body.refreshToken || req.cookies?.refreshToken;
-  const tokens = await authService.refreshTokens(refreshToken);
-  setTokenCookies(res, tokens.accessToken, tokens.refreshToken);
-  res.json({
+export const loginUser = asyncHandler(async (req, res) => {
+  const { email, username, password } = req.body;
+  const identifier = email || username;
+  const { user, otpData } = await loginUserService(identifier, password);
+  await publishToQueue('AUTH_NOTIFICATION.LOGIN_OTP', {
+    email: user.email,
+    fullName: user.fullName,
+    username: user.username,
+    otpCode: otpData.code,
+  });
+  return res.status(200).json({
     success: true,
-    data: {
-      accessToken: tokens.accessToken,
-      refreshToken: tokens.refreshToken,
-      expiresIn: '15m',
-    },
+    message: 'OTP sent to your email. Please verify to complete login.',
   });
 });
+
+export const verifyLoginOTP = asyncHandler(async (req, res) => {
+  const { email, username, otp } = req.body;
+  const identifier = email || username;
+  const user = await verifyLoginOTPUser(identifier, otp);
+  const token = generateToken(user._id, user.email, user.username);
+  setTokenCookie(res, token);
+  await publishToQueue('AUTH_NOTIFICATION.LOGIN_SUCCESS', {
+    email: user.email,
+    fullName: user.fullName,
+    username: user.username,
+  });
+  return res.status(200).json({
+    success: true,
+    message: 'Login successful',
+    user: getProfileUser(user),
+  });
+});
+
+export const forgotPassword = asyncHandler(async (req, res) => {
+  const { email, username } = req.body;
+  const identifier = email || username;
+  const { user, otpData } = await forgotPasswordUser(identifier);
+  await publishToQueue('AUTH_NOTIFICATION.FORGOT_PASSWORD_OTP', {
+    email: user.email,
+    fullName: user.fullName,
+    username: user.username,
+    otpCode: otpData.code,
+  });
+  return res.status(200).json({
+    success: true,
+    message: 'OTP sent to your email for password reset.',
+  });
+});
+
+export const verifyForgotPasswordOTP = asyncHandler(async (req, res) => {
+  const { email, username, otp } = req.body;
+  const identifier = email || username;
+  await verifyForgotPasswordOTPUser(identifier, otp);
+  return res.status(200).json({
+    success: true,
+    message: 'OTP verified. You can now reset your password.',
+    email: email || undefined,
+    username: username || undefined,
+  });
+});
+
+export const resetPassword = asyncHandler(async (req, res) => {
+  const { email, username, newPassword } = req.body;
+  const identifier = email || username;
+  const user = await resetPasswordUser(identifier, newPassword);
+  await publishToQueue('AUTH_NOTIFICATION.PASSWORD_UPDATED', {
+    email: user.email,
+    fullName: user.fullName,
+    username: user.username,
+  });
+  return res.status(200).json({
+    success: true,
+    message: 'Password reset successful. You can now login with your new password.',
+  });
+});
+
+export const oauthCallback = (provider) =>
+  asyncHandler(async (req, res) => {
+    const user = req.user;
+    if (!user) return res.redirect(`${process.env.FRONTEND_URL || '/'}/login?error=oauth_failed`);
+    const isNewUser = req.authInfo?.isNewUser === true;
+    const token = generateToken(user._id, user.email, user.username);
+    setTokenCookie(res, token);
+    if (isNewUser) {
+      await publishToQueue('AUTH_NOTIFICATION.OAUTH_WELCOME', {
+        email: user.email,
+        fullName: user.fullName,
+        username: user.username,
+        provider,
+      });
+    } else {
+      await publishToQueue('AUTH_NOTIFICATION.LOGIN_SUCCESS', {
+        email: user.email,
+        fullName: user.fullName,
+        username: user.username,
+      });
+    }
+    res.redirect(process.env.FRONTEND_URL || '/');
+  });
 
 export const logout = asyncHandler(async (req, res) => {
-  res.clearCookie('accessToken');
-  res.clearCookie('refreshToken');
-  res.json({ success: true, message: 'Logged out successfully' });
+  res.clearCookie('token', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+  });
+  return res.status(200).json({
+    success: true,
+    message: 'Logged out successfully',
+  });
 });
 
-export const googleAuth = (req, res, next) => {
-  passport.authenticate('google', { session: false })(req, res, next);
-};
 
-export const googleCallback = asyncHandler(async (req, res) => {
-  const user = req.user;
-  const tokens = authService.generateTokens(user._id);
-  setTokenCookies(res, tokens.accessToken, tokens.refreshToken);
-  res.redirect(`${env.FRONTEND_URL}/auth/callback?token=${tokens.accessToken}&refresh=${tokens.refreshToken}`);
+export const getCurrentUser = asyncHandler(async (req, res) => {
+  return res.status(200).json({
+    success: true,
+    user: getProfileUser(req.user),
+  });
 });
-
-export const githubAuth = (req, res, next) => {
-  passport.authenticate('github', { session: false })(req, res, next);
-};
-
-export const githubCallback = asyncHandler(async (req, res) => {
-  const user = req.user;
-  const tokens = authService.generateTokens(user._id);
-  setTokenCookies(res, tokens.accessToken, tokens.refreshToken);
-  res.redirect(`${env.FRONTEND_URL}/auth/callback?token=${tokens.accessToken}&refresh=${tokens.refreshToken}`);
-});
-
-export default {
-  signup,
-  login,
-  refresh,
-  logout,
-  googleAuth,
-  googleCallback,
-  githubAuth,
-  githubCallback,
-};

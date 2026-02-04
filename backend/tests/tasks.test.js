@@ -1,9 +1,8 @@
 import request from 'supertest';
-import mongoose from 'mongoose';
 import app from '../src/app.js';
 import User from '../src/models/user.model.js';
 import Task from '../src/models/task.model.js';
-import * as authService from '../src/services/auth.service.js';
+import * as dbHandler from './db-handler.js';
 
 const api = request(app);
 
@@ -13,17 +12,30 @@ describe('Tasks API', () => {
   let taskId;
 
   beforeAll(async () => {
-    await mongoose.connect(process.env.MONGODB_URI);
+    await dbHandler.connect();
     const email = `test-tasks-${Date.now()}@test.com`;
-    const result = await authService.signup(email, 'TestPass123', 'Tasks Test');
-    token = result.accessToken;
-    userId = result.user._id;
+    
+    // Register user
+    const registerRes = await api.post('/api/v1/auth/register').send({
+      email,
+      password: 'TestPass123',
+      fullName: { firstName: 'Tasks', lastName: 'Test' },
+    });
+    
+    const otp = registerRes.body.data.otp; // In test mode, OTP is returned
+    
+    // Verify OTP
+    const verifyRes = await api.post('/api/v1/auth/verify-register-otp').send({
+      email,
+      otp,
+    });
+    
+    token = verifyRes.body.data.accessToken;
+    userId = verifyRes.body.data.user._id;
   });
 
   afterAll(async () => {
-    await Task.deleteMany({ createdBy: userId });
-    await User.deleteMany({ email: /test-tasks/ });
-    await mongoose.disconnect();
+    await dbHandler.closeDatabase();
   });
 
   describe('POST /api/v1/tasks', () => {
@@ -99,6 +111,146 @@ describe('Tasks API', () => {
         .get(`/api/v1/tasks/${taskId}`)
         .set('Authorization', `Bearer ${token}`);
       expect(res.status).toBe(404);
+    });
+  });
+
+  describe('Task Filters and Search', () => {
+    beforeAll(async () => {
+      // Create tasks with different statuses and priorities
+      await api
+        .post('/api/v1/tasks')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ title: 'High Priority Task', priority: 'high', status: 'todo' });
+      
+      await api
+        .post('/api/v1/tasks')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ title: 'In Progress Task', status: 'in_progress' });
+    });
+
+    it('should filter tasks by status', async () => {
+      const res = await api
+        .get('/api/v1/tasks?status=in_progress')
+        .set('Authorization', `Bearer ${token}`);
+      expect(res.status).toBe(200);
+      expect(res.body.data.tasks.every(t => t.status === 'in_progress')).toBe(true);
+    });
+
+    it('should filter tasks by priority', async () => {
+      const res = await api
+        .get('/api/v1/tasks?priority=high')
+        .set('Authorization', `Bearer ${token}`);
+      expect(res.status).toBe(200);
+      expect(res.body.data.tasks.every(t => t.priority === 'high')).toBe(true);
+    });
+
+    it('should search tasks by title', async () => {
+      const res = await api
+        .get('/api/v1/tasks?search=High')
+        .set('Authorization', `Bearer ${token}`);
+      expect(res.status).toBe(200);
+      expect(res.body.data.tasks.length).toBeGreaterThan(0);
+    });
+
+    it('should sort tasks', async () => {
+      const res = await api
+        .get('/api/v1/tasks?sort=title&order=asc')
+        .set('Authorization', `Bearer ${token}`);
+      expect(res.status).toBe(200);
+      expect(Array.isArray(res.body.data.tasks)).toBe(true);
+    });
+  });
+
+  describe('Task Authorization', () => {
+    let otherUserToken;
+    let otherUserTaskId;
+
+    beforeAll(async () => {
+      // Create another user
+      const email = `test-other-${Date.now()}@test.com`;
+      const registerRes = await api.post('/api/v1/auth/register').send({
+        email,
+        password: 'TestPass123',
+        fullName: { firstName: 'Other', lastName: 'User' },
+      });
+      const otp = registerRes.body.data.otp;
+      const verifyRes = await api.post('/api/v1/auth/verify-register-otp').send({
+        email,
+        otp,
+      });
+      otherUserToken = verifyRes.body.data.accessToken;
+
+      // Create a task as the other user
+      const taskRes = await api
+        .post('/api/v1/tasks')
+        .set('Authorization', `Bearer ${otherUserToken}`)
+        .send({ title: 'Other User Task', status: 'todo' });
+      otherUserTaskId = taskRes.body.data.task._id;
+    });
+
+    it('should not allow accessing another user\'s task', async () => {
+      const res = await api
+        .get(`/api/v1/tasks/${otherUserTaskId}`)
+        .set('Authorization', `Bearer ${token}`);
+      expect([403, 404]).toContain(res.status);
+    });
+
+    it('should not allow updating another user\'s task', async () => {
+      const res = await api
+        .put(`/api/v1/tasks/${otherUserTaskId}`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ title: 'Hacked Title' });
+      expect([403, 404]).toContain(res.status);
+    });
+
+    it('should not allow deleting another user\'s task', async () => {
+      const res = await api
+        .delete(`/api/v1/tasks/${otherUserTaskId}`)
+        .set('Authorization', `Bearer ${token}`);
+      expect([403, 404]).toContain(res.status);
+    });
+  });
+
+  describe('POST /api/v1/tasks/upload-base64', () => {
+    it('should upload base64 image', async () => {
+      const base64Image = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+      const res = await api
+        .post('/api/v1/tasks/upload-base64')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ image: base64Image });
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.imageUrl).toBeDefined();
+    });
+
+    it('should reject invalid base64 format', async () => {
+      const res = await api
+        .post('/api/v1/tasks/upload-base64')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ image: 'invalid-base64' });
+      expect(res.status).toBe(400);
+    });
+
+    it('should reject missing image', async () => {
+      const res = await api
+        .post('/api/v1/tasks/upload-base64')
+        .set('Authorization', `Bearer ${token}`)
+        .send({});
+      expect(res.status).toBe(400);
+    });
+  });
+
+  describe('Task without authentication', () => {
+    it('should reject creating task without auth', async () => {
+      const res = await api
+        .post('/api/v1/tasks')
+        .send({ title: 'Unauthorized Task' });
+      expect(res.status).toBe(401);
+    });
+
+    it('should reject listing tasks without auth', async () => {
+      const res = await api.get('/api/v1/tasks');
+      expect(res.status).toBe(401);
     });
   });
 });
