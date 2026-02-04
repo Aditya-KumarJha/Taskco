@@ -40,7 +40,6 @@ export async function publishToQueue(queueName, data = {}) {
   try {
     await channel.assertQueue(queueName, { durable: true });
     channel.sendToQueue(queueName, Buffer.from(JSON.stringify(data)), { persistent: true });
-    logger.debug(`Message sent to ${queueName}`);
   } catch (error) {
     logger.error('Publish to queue error:', error.message);
   }
@@ -55,19 +54,43 @@ export async function subscribeToQueue(queueName, callback) {
     return;
   }
   try {
-    await channel.assertQueue(queueName, { durable: true });
-    channel.consume(queueName, async (msg) => {
-      if (msg === null) return;
+    const q = await channel.assertQueue(queueName, { durable: true });
+    logger.info(`Queue ${queueName} has ${q.messageCount} messages waiting`);
+    
+    channel.prefetch(1);
+    
+    const testMsg = await channel.get(queueName, { noAck: false });
+    if (testMsg) {
+      logger.info(`🧪 TEST: Found message in queue ${queueName}, processing manually`);
+      try {
+        const data = JSON.parse(testMsg.content.toString());
+        await callback(data);
+        channel.ack(testMsg);
+        logger.info(`✅ TEST message processed for ${queueName}`);
+      } catch (err) {
+        logger.error(`TEST message error:`, err);
+        channel.nack(testMsg, false, true);
+      }
+    }
+    
+    const consumerTag = await channel.consume(queueName, async (msg) => {
+      if (msg === null) {
+        logger.warn(`Consumer ${queueName} cancelled by server`);
+        return;
+      }
+      logger.info(`📥 Message received from ${queueName}`);
       try {
         const data = JSON.parse(msg.content.toString());
         await callback(data);
         channel.ack(msg);
+        logger.info(`✅ Message acknowledged for ${queueName}`);
       } catch (err) {
         logger.error(`Consumer ${queueName} error:`, err.message);
+        logger.error('Full error:', err);
         channel.nack(msg, false, true);
       }
     }, { noAck: false });
-    logger.info(`Consumer started: ${queueName}`);
+    logger.info(`Consumer started: ${queueName} (tag: ${consumerTag.consumerTag})`);
   } catch (error) {
     logger.error('Subscribe error:', error.message);
   }

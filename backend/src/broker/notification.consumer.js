@@ -39,17 +39,37 @@ const footerSignature = `
 `;
 
 const send = async (data, { subject, title, body, text }) => {
-  if (!data?.email) return;
+  if (!data?.email) {
+    logger.warn('Email skipped: no recipient email in payload', data);
+    return;
+  }
+
   const html = emailLayout({ title, body });
+
   try {
-    await sendEmail({ to: data.email, subject, text: text || body, html });
+    const result = await sendEmail({
+      to: data.email,
+      subject,
+      text: text || undefined,
+      html,
+    });
+
+    if (!result) {
+      logger.warn('Email not sent to:', data.email);
+    }
   } catch (error) {
-    logger.error('Notification email failed:', error.message);
+    logger.error('Notification email failed', error);
   }
 };
 
 export async function startNotificationConsumers() {
-  subscribeToQueue('AUTH_NOTIFICATION.REGISTER_OTP', async (data) => {
+  const register = (queue, handler) => {
+    subscribeToQueue(queue, async (data) => {
+      await handler(data);
+    });
+  };
+
+  register('AUTH_NOTIFICATION.REGISTER_OTP', async (data) => {
     const name = getCustomerName(data);
     await send(data, {
       subject: 'Verify your email – Taskco',
@@ -66,7 +86,7 @@ export async function startNotificationConsumers() {
     });
   });
 
-  subscribeToQueue('AUTH_NOTIFICATION.RESEND_OTP', async (data) => {
+  register('AUTH_NOTIFICATION.RESEND_OTP', async (data) => {
     const name = getCustomerName(data);
     await send(data, {
       subject: 'Your New OTP – Taskco',
@@ -82,7 +102,7 @@ export async function startNotificationConsumers() {
     });
   });
 
-  subscribeToQueue('AUTH_NOTIFICATION.LOGIN_OTP', async (data) => {
+  register('AUTH_NOTIFICATION.LOGIN_OTP', async (data) => {
     const name = getCustomerName(data);
     await send(data, {
       subject: 'Login Verification – Taskco',
@@ -98,7 +118,7 @@ export async function startNotificationConsumers() {
     });
   });
 
-  subscribeToQueue('AUTH_NOTIFICATION.FORGOT_PASSWORD_OTP', async (data) => {
+  register('AUTH_NOTIFICATION.FORGOT_PASSWORD_OTP', async (data) => {
     const name = getCustomerName(data);
     await send(data, {
       subject: 'Reset Your Password – Taskco',
@@ -114,7 +134,7 @@ export async function startNotificationConsumers() {
     });
   });
 
-  subscribeToQueue('AUTH_NOTIFICATION.WELCOME_USER', async (data) => {
+  register('AUTH_NOTIFICATION.WELCOME_USER', async (data) => {
     const name = getCustomerName(data);
     await send(data, {
       subject: 'Welcome to Taskco!',
@@ -129,7 +149,7 @@ export async function startNotificationConsumers() {
     });
   });
 
-  subscribeToQueue('AUTH_NOTIFICATION.LOGIN_SUCCESS', async (data) => {
+  register('AUTH_NOTIFICATION.LOGIN_SUCCESS', async (data) => {
     const name = getCustomerName(data);
     await send(data, {
       subject: 'Successful Login – Taskco',
@@ -143,21 +163,21 @@ export async function startNotificationConsumers() {
     });
   });
 
-  subscribeToQueue('AUTH_NOTIFICATION.OAUTH_WELCOME', async (data) => {
+  register('AUTH_NOTIFICATION.OAUTH_WELCOME', async (data) => {
     const name = getCustomerName(data);
     await send(data, {
       subject: 'Welcome to Taskco!',
       title: 'Welcome to Taskco!',
       body: `
         <p>Hi <strong>${name}</strong>,</p>
-        <p>Your account has been created with ${data.provider || 'OAuth'}. You can now create and manage tasks.</p>
+        <p>Your account has been created with ${data.provider || 'OAuth'}.</p>
         ${footerSignature}
       `,
       text: 'Your Taskco account is ready.',
     });
   });
 
-  subscribeToQueue('AUTH_NOTIFICATION.PASSWORD_UPDATED', async (data) => {
+  register('AUTH_NOTIFICATION.PASSWORD_UPDATED', async (data) => {
     const name = getCustomerName(data);
     await send(data, {
       subject: 'Password Updated – Taskco',
@@ -165,15 +185,13 @@ export async function startNotificationConsumers() {
       body: `
         <p>Hi <strong>${name}</strong>,</p>
         <p>Your Taskco account password has been successfully updated.</p>
-        <p>If you did not perform this action, please contact support immediately.</p>
         ${footerSignature}
       `,
       text: 'Your password has been updated.',
     });
   });
 
-  subscribeToQueue('TASK_NOTIFICATION.TASK_CREATED', async (data) => {
-    if (!data?.email) return;
+  register('TASK_NOTIFICATION.TASK_CREATED', async (data) => {
     await send(data, {
       subject: 'Task created – Taskco',
       title: 'Task created',
@@ -186,8 +204,7 @@ export async function startNotificationConsumers() {
     });
   });
 
-  subscribeToQueue('TASK_NOTIFICATION.TASK_UPDATED', async (data) => {
-    if (!data?.email) return;
+  register('TASK_NOTIFICATION.TASK_UPDATED', async (data) => {
     await send(data, {
       subject: 'Task updated – Taskco',
       title: 'Task updated',
@@ -200,8 +217,7 @@ export async function startNotificationConsumers() {
     });
   });
 
-  subscribeToQueue('TASK_NOTIFICATION.TASK_DELETED', async (data) => {
-    if (!data?.email) return;
+  register('TASK_NOTIFICATION.TASK_DELETED', async (data) => {
     await send(data, {
       subject: 'Task deleted – Taskco',
       title: 'Task deleted',
