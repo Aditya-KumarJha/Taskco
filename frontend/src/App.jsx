@@ -57,7 +57,7 @@ function App() {
 
     prevAuthRef.current = auth.isAuthenticated;
 
-    const publicPaths = ["/login", "/signup"];
+    const publicPaths = ["/", "/login", "/signup"];
     const currentPath = location.pathname;
 
     const isPublic = publicPaths.some(
@@ -80,10 +80,9 @@ function App() {
       {shouldShowNav && <NavBar />}
 
       <Routes>
+        <Route path="/" element={<Home />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
-
-        <Route path="/" element={<Home />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/tasks" element={<TaskPage />} />
         <Route path="/create-task" element={<CreateTaskPage />} />
