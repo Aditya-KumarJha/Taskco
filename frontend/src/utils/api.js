@@ -5,20 +5,13 @@ async function request(path, { method = "GET", body, headers = {} } = {}) {
     method,
     credentials: "include",
     headers: {
-      // default headers; `Content-Type` is intentionally not set here when
-      // the body is FormData because the browser will set the correct
-      // multipart boundary automatically.
       ...headers,
     },
   };
 
   if (body !== undefined) {
-    // If body is FormData (e.g., file uploads), pass it through directly
-    // and DO NOT stringify or set Content-Type. For regular JSON bodies,
-    // stringify and set Content-Type header.
     if (body instanceof FormData) {
       config.body = body;
-      // Remove any Content-Type header so the browser will add the multipart boundary
       if (config.headers && config.headers['Content-Type']) {
         delete config.headers['Content-Type'];
       }

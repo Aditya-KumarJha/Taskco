@@ -23,11 +23,16 @@ const Dashboard = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    const previous = document.title;
+    document.title = "Taskco — Dashboard";
     dispatch(fetchTasks());
     dispatch(fetchNotifications());
     if (!user) {
       dispatch(verifySession());
     }
+    return () => {
+      document.title = previous;
+    };
   }, [dispatch, user]);
 
   useEffect(() => {

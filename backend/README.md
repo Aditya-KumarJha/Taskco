@@ -69,6 +69,35 @@ A powerful and scalable RESTful API backend for Taskco - a modern task managemen
 
 ---
 
+## 📚 API Documentation
+
+### Postman Collections
+
+Complete API documentation is available via Postman:
+
+#### 📦 **Complete Collection**
+[View Complete API Documentation](https://cipher-squad.postman.co/workspace/1c4355f7-6b47-42bf-9abc-c27ee3908c7e)
+
+#### Individual Collections:
+
+1. **🔐 Authentication API**
+   - [View Auth Documentation](https://documenter.getpostman.com/view/38185839/2sBXc7LjxY)
+   - Endpoints: Registration, Login, OAuth, Password Reset
+
+2. **👤 Profile API**
+   - [View Profile Documentation](https://documenter.getpostman.com/view/38185839/2sBXc7M4kf)
+   - Endpoints: Get Profile, Update Profile, Upload Avatar
+
+3. **✅ Tasks API**
+   - [View Tasks Documentation](https://documenter.getpostman.com/view/38185839/2sBXc7M4km)
+   - Endpoints: CRUD operations, Filtering, Pagination
+
+4. **🔔 Notifications API**
+   - [View Notifications Documentation](https://documenter.getpostman.com/view/38185839/2sBXc7M4ko)
+   - Endpoints: Get Notifications, Mark as Read, Delete
+
+---
+
 ## 🛠️ Tech Stack
 
 | Technology | Purpose | Version |
@@ -328,35 +357,6 @@ docker-compose down
 # View logs
 docker-compose logs -f api
 ```
-
----
-
-## 📚 API Documentation
-
-### Postman Collections
-
-Complete API documentation is available via Postman:
-
-#### 📦 **Complete Collection**
-[View Complete API Documentation](https://documenter.getpostman.com/view/XXXXXXXX/XXXXXXXXXX)
-
-#### Individual Collections:
-
-1. **🔐 Authentication API**
-   - [View Auth Documentation](https://documenter.getpostman.com/view/38185839/2sBXc7M4kf)
-   - Endpoints: Registration, Login, OAuth, Password Reset
-
-2. **👤 Profile API**
-   - [View Profile Documentation](https://documenter.getpostman.com/view/XXXXXXXX/XXXXXXXXXX)
-   - Endpoints: Get Profile, Update Profile, Upload Avatar
-
-3. **✅ Tasks API**
-   - [View Tasks Documentation](https://documenter.getpostman.com/view/XXXXXXXX/XXXXXXXXXX)
-   - Endpoints: CRUD operations, Filtering, Pagination
-
-4. **🔔 Notifications API**
-   - [View Notifications Documentation](https://documenter.getpostman.com/view/XXXXXXXX/XXXXXXXXXX)
-   - Endpoints: Get Notifications, Mark as Read, Delete
 
 ---
 

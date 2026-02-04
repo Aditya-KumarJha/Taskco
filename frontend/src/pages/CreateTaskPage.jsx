@@ -18,6 +18,14 @@ const CreateTaskPage = () => {
   const formRef = useRef(null);
 
   useEffect(() => {
+    const previous = document.title;
+    document.title = "Taskco — Create Task";
+    return () => {
+      document.title = previous;
+    };
+  }, []);
+
+  useEffect(() => {
     gsap.fromTo(
       ".create-task-hero",
       { opacity: 0, y: 50 },

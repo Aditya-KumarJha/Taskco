@@ -41,6 +41,14 @@ const TaskPage = () => {
   }, [dispatch, filters]);
 
   useEffect(() => {
+    const previous = document.title;
+    document.title = "Taskco — Tasks";
+    return () => {
+      document.title = previous;
+    };
+  }, []);
+
+  useEffect(() => {
     gsap.fromTo(
       ".tasks-hero",
       { opacity: 0, y: 40 },

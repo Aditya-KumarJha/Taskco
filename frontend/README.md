@@ -636,37 +636,327 @@ import { motion } from 'framer-motion';
 
 ## 📜 Scripts
 
-| Command | Description | Usage |
-|---------|-------------|-------|
-| `npm run dev` | Start development server | Local development |
-| `npm run build` | Build for production | Production deployment |
-| `npm run preview` | Preview production build | Testing build locally |
-| `npm run lint` | Run ESLint | Code quality check |
+Complete guide to all available npm scripts for the frontend application.
 
-### Script Details
+### Quick Reference
 
-**`npm run dev`**
-- Starts Vite dev server
-- Enables HMR (Hot Module Replacement)
-- Opens at `http://localhost:5173`
-- Fast refresh on file changes
+| Command | Description | Usage | Port |
+|---------|-------------|-------|------|
+| `npm run dev` | Start development server | Local development | 5173 |
+| `npm run build` | Build for production | Production deployment | - |
+| `npm run preview` | Preview production build | Testing build locally | 4173 |
+| `npm run lint` | Run ESLint | Code quality check | - |
 
-**`npm run build`**
-- Creates optimized production bundle
-- Outputs to `dist/` directory
-- Minifies JavaScript and CSS
+---
+
+### Development Scripts
+
+#### `npm run dev`
+
+**Start Vite development server with hot reload**
+
+```bash
+npm run dev
+```
+
+**What it does:**
+- Starts **Vite** development server
+- Enables **Hot Module Replacement (HMR)**
+- Opens application at `http://localhost:5173`
+- Watches for file changes and auto-reloads
+- Enables React Fast Refresh
+- Serves with source maps for debugging
+
+**Features:**
+- ⚡ Lightning-fast HMR (< 100ms updates)
+- 🔥 React Fast Refresh (preserves state)
+- 🎨 CSS hot reload (no page refresh)
+- 🖼️ Image optimization on-the-fly
+- 🐛 Detailed error overlay
+- 📝 Source maps for debugging
+
+**Output:**
+```
+  VITE v5.4.10  ready in 523 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: http://192.168.1.100:5173/
+  ➜  press h + enter to show help
+```
+
+**Common Issues:**
+- Port 5173 already in use → Vite auto-increments to 5174
+- Module not found → Run `npm install`
+- Blank page → Check browser console for errors
+
+---
+
+### Build Scripts
+
+#### `npm run build`
+
+**Create optimized production build**
+
+```bash
+npm run build
+```
+
+**What it does:**
+- Compiles React code to optimized JavaScript
+- Minifies all JavaScript and CSS
+- Removes dead code (tree shaking)
+- Splits code into chunks (lazy loading)
 - Optimizes images and assets
-- Generates source maps
+- Generates production-ready `/dist` folder
 
-**`npm run preview`**
-- Serves production build locally
-- Tests build before deployment
+**Build Optimizations:**
+- 📦 **Code Splitting** - Separate chunks for better caching
+- 🌳 **Tree Shaking** - Removes unused exports
+- 🗜️ **Minification** - Reduces file sizes (JS, CSS, HTML)
+- 🖼️ **Image Optimization** - Compressed images
+- 📊 **Bundle Analysis** - Generates size report
+- 🔗 **Asset Hashing** - Cache busting with hashed filenames
+- 📦 **Gzip Ready** - Pre-compressed for web servers
+
+**Output:**
+```
+vite v5.4.10 building for production...
+✓ 1234 modules transformed.
+dist/index.html                   0.45 kB │ gzip:  0.30 kB
+dist/assets/index-a1b2c3d4.css    45.2 kB │ gzip:  12.3 kB
+dist/assets/index-e5f6g7h8.js    156.8 kB │ gzip:  52.1 kB
+✓ built in 12.34s
+```
+
+**Build Output Structure:**
+```
+dist/
+├── index.html              # Entry HTML file
+├── assets/
+│   ├── index.[hash].js    # Main JavaScript bundle
+│   ├── index.[hash].css   # Compiled CSS
+│   ├── vendor.[hash].js   # Third-party libraries
+│   └── *.png/svg/jpg      # Optimized images
+└── img/                   # Public images
+```
+
+**Typical Build Sizes:**
+- Development: ~2-3 MB (uncompressed)
+- Production: ~300-500 KB (gzipped)
+- Initial Load: ~150-200 KB
+
+**After Building:**
+- Test locally: `npm run preview`
+- Deploy `/dist` folder to hosting service
+- Set environment variables on hosting platform
+
+---
+
+#### `npm run preview`
+
+**Preview production build locally**
+
+```bash
+npm run preview
+```
+
+**What it does:**
+- Serves the `/dist` folder locally
+- Simulates production environment
+- Tests build before actual deployment
 - Runs on `http://localhost:4173`
 
-**`npm run lint`**
-- Checks code quality with ESLint
-- Reports errors and warnings
-- Enforces coding standards
+**Prerequisites:**
+- Must run `npm run build` first
+- Requires `/dist` folder to exist
+
+**Use Cases:**
+- ✅ Verify build works correctly
+- ✅ Test production optimizations
+- ✅ Check routing in production mode
+- ✅ Validate environment variables
+- ✅ Ensure assets load correctly
+
+**Output:**
+```
+  ➜  Local:   http://localhost:4173/
+  ➜  Network: http://192.168.1.100:4173/
+```
+
+**Testing Checklist:**
+- [ ] All pages load correctly
+- [ ] Navigation works
+- [ ] API calls succeed
+- [ ] Images display properly
+- [ ] Animations run smoothly
+- [ ] No console errors
+- [ ] Authentication works
+- [ ] Forms submit correctly
+
+---
+
+### Code Quality Scripts
+
+#### `npm run lint`
+
+**Run ESLint to check code quality**
+
+```bash
+npm run lint
+```
+
+**What it does:**
+- Runs **ESLint** on all source files
+- Checks for syntax errors
+- Enforces code style rules
+- Identifies potential bugs
+- Ensures React best practices
+- Validates TailwindCSS usage
+
+**Checks Include:**
+- ✅ React best practices
+- ✅ React Hooks rules
+- ✅ JSX accessibility (a11y)
+- ✅ Unused variables
+- ✅ Missing dependencies
+- ✅ TailwindCSS class order
+- ✅ Import/export consistency
+
+**Fix Automatically:**
+```bash
+npx eslint . --fix
+```
+
+**Common Warnings:**
+- `react/prop-types` - Missing prop validation
+- `react-hooks/exhaustive-deps` - Missing dependencies
+- `no-unused-vars` - Unused variables
+- `jsx-a11y/*` - Accessibility issues
+
+---
+
+### Advanced Workflows
+
+#### 🚀 Development Workflow
+
+```bash
+# 1. Start development server
+npm run dev
+
+# 2. Make changes (auto-reloads)
+# 3. Check for errors in browser console
+# 4. Verify changes work as expected
+```
+
+#### 🏗️ Pre-Deployment Workflow
+
+```bash
+# 1. Check code quality
+npm run lint
+
+# 2. Build for production
+npm run build
+
+# 3. Preview build locally
+npm run preview
+
+# 4. Test all features
+# 5. Deploy /dist folder
+```
+
+#### ✅ Pre-Commit Workflow
+
+```bash
+# 1. Lint code
+npm run lint
+
+# 2. Fix linting errors
+npx eslint . --fix
+
+# 3. Test build
+npm run build
+
+# 4. Commit if successful
+git add .
+git commit -m "Your message"
+```
+
+#### 🐛 Debugging Build Issues
+
+```bash
+# 1. Clear node_modules and cache
+rm -rf node_modules dist .vite
+npm install
+
+# 2. Try building again
+npm run build
+
+# 3. Check for errors in output
+# 4. Verify environment variables
+# 5. Check browser console in preview
+npm run preview
+```
+
+---
+
+### Performance Tips
+
+**Development:**
+- Use `npm run dev` for fast iteration
+- Enable React DevTools for debugging
+- Check Network tab for slow requests
+- Use Redux DevTools for state debugging
+
+**Production:**
+- Always run `npm run build` before deploying
+- Test with `npm run preview` first
+- Monitor bundle sizes (keep < 500KB gzipped)
+- Enable gzip compression on server
+- Use CDN for static assets
+
+**Optimization:**
+- Lazy load routes and components
+- Optimize images before adding
+- Use code splitting for large dependencies
+- Minimize third-party libraries
+- Enable tree shaking
+
+---
+
+### Troubleshooting
+
+**Dev Server Won't Start:**
+```bash
+# Check if port is in use
+lsof -ti:5173 | xargs kill -9
+
+# Clear cache and restart
+rm -rf node_modules/.vite
+npm run dev
+```
+
+**Build Fails:**
+```bash
+# Clear everything and reinstall
+rm -rf node_modules dist package-lock.json
+npm install
+npm run build
+```
+
+**Linting Errors:**
+```bash
+# Auto-fix what's possible
+npx eslint . --fix
+
+# Check remaining errors
+npm run lint
+```
+
+**Environment Variables Not Working:**
+- Ensure variables start with `VITE_`
+- Restart dev server after changing `.env`
+- Check `.env` file exists
+- Verify variable names match in code
 
 ---
 

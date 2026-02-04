@@ -16,10 +16,15 @@ const LoginPage = () => {
   const [searchParams] = useSearchParams();
 
   useEffect(() => {
+    const previous = document.title;
+    document.title = "Taskco — Login";
     if (searchParams.get("reset")) {
       setForgotStep(false);
       setOtpStep(false);
     }
+    return () => {
+      document.title = previous;
+    };
   }, [searchParams]);
 
   return (

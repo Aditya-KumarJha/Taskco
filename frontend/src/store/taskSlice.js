@@ -148,7 +148,6 @@ const taskSlice = createSlice({
         state.error = action.error.message;
       })
       
-      // Fetch task by id
       .addCase(fetchTaskById.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -162,7 +161,6 @@ const taskSlice = createSlice({
         state.error = action.error.message;
       })
       
-      // Create task
       .addCase(createTask.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -182,7 +180,6 @@ const taskSlice = createSlice({
         state.error = action.error.message;
       })
       
-      // Update task
       .addCase(updateTask.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -196,8 +193,7 @@ const taskSlice = createSlice({
         if (index !== -1) {
           const oldStatus = state.tasks[index].status;
           state.tasks[index] = updatedTask;
-          
-          // Update stats if status changed
+
           if (oldStatus !== updatedTask.status) {
             state.stats[oldStatus]--;
             state.stats[updatedTask.status]++;
@@ -213,7 +209,6 @@ const taskSlice = createSlice({
         state.error = action.error.message;
       })
       
-      // Delete task
       .addCase(deleteTask.pending, (state) => {
         state.loading = true;
         state.error = null;

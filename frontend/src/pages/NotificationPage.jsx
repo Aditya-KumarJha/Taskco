@@ -21,6 +21,14 @@ const NotificationPage = () => {
   }, [dispatch]);
 
   useEffect(() => {
+    const previous = document.title;
+    document.title = "Taskco — Notifications";
+    return () => {
+      document.title = previous;
+    };
+  }, []);
+
+  useEffect(() => {
     gsap.fromTo(
       ".notifications-hero",
       { opacity: 0, y: 50 },

@@ -129,6 +129,45 @@
 
 ---
 
+## 📚 API Documentation
+
+### Postman Collections
+
+Complete API documentation is available via Postman:
+
+#### 📦 **Complete Collection**
+[View Complete API Documentation](https://cipher-squad.postman.co/workspace/1c4355f7-6b47-42bf-9abc-c27ee3908c7e)
+
+#### Individual Collections:
+
+1. **🔐 Authentication API**
+   - [View Auth Documentation](https://documenter.getpostman.com/view/38185839/2sBXc7LjxY)
+   - Endpoints: Registration, Login, OAuth, Password Reset
+
+2. **👤 Profile API**
+   - [View Profile Documentation](https://documenter.getpostman.com/view/38185839/2sBXc7M4kf)
+   - Endpoints: Get Profile, Update Profile, Upload Avatar
+
+3. **✅ Tasks API**
+   - [View Tasks Documentation](https://documenter.getpostman.com/view/38185839/2sBXc7M4km)
+   - Endpoints: CRUD operations, Filtering, Pagination
+
+4. **🔔 Notifications API**
+   - [View Notifications Documentation](https://documenter.getpostman.com/view/38185839/2sBXc7M4ko)
+   - Endpoints: Get Notifications, Mark as Read, Delete
+
+---
+
+### Importing Collections
+
+1. Download from Postman links
+2. Import into Postman
+3. Set environment variables:
+   - `base_url`: `http://localhost:3000/api/v1`
+   - `token`: Your JWT token (auto-set after login)
+
+---
+
 ## 🛠️ Tech Stack
 
 ### Frontend
@@ -1131,6 +1170,277 @@ docker-compose down
 
 ---
 
+## 📜 Available Scripts
+
+Comprehensive guide to all npm scripts available in the project.
+
+### Backend Scripts
+
+#### Development Scripts
+
+**`npm run dev`**
+```bash
+cd backend
+npm run dev
+```
+- Starts development server with **nodemon**
+- Auto-restarts on file changes
+- Connects to development database
+- Enables detailed logging
+- Hot reload for rapid development
+- **Port:** `3000` (or your PORT in `.env`)
+
+**`npm run seed`**
+```bash
+cd backend
+npm run seed
+```
+- Seeds database with sample data
+- Creates demo users (with hashed passwords)
+- Generates sample tasks across categories
+- Creates test notifications
+- **Use case:** Quick setup for development/testing
+- **Note:** Can be run multiple times
+
+**`npm run seed:dev`**
+```bash
+cd backend
+npm run seed:dev
+```
+- Same as `npm run seed` but with `NODE_ENV=development`
+- Ensures development-specific configurations
+- Uses development database from `.env`
+
+**`npm run clear-db`**
+```bash
+cd backend
+npm run clear-db
+```
+- ⚠️ **WARNING:** Deletes ALL data from database
+- Drops all collections (users, tasks, notifications)
+- Resets database to clean state
+- **Use case:** Reset before fresh seeding
+- **Caution:** Cannot be undone!
+
+#### Production Scripts
+
+**`npm start`**
+```bash
+cd backend
+NODE_ENV=production npm start
+```
+- Starts production server
+- No auto-reload (uses plain Node.js)
+- Optimized for performance
+- Production-level logging
+- Uses production environment variables
+- **Deployment:** Use this in production
+
+#### Testing Scripts
+
+**`npm test`**
+```bash
+cd backend
+npm test
+```
+- Runs complete test suite with **Jest**
+- Executes all `.test.js` files in `/tests`
+- Generates coverage report in `/coverage`
+- Uses MongoDB Memory Server (isolated DB)
+- Forces exit after tests complete
+- **Coverage:** HTML report at `coverage/lcov-report/index.html`
+- **Tests included:**
+  - `auth.test.js` - Authentication endpoints
+  - `profile.test.js` - Profile management
+  - `tasks.test.js` - Task CRUD operations
+  - `notification.test.js` - Notification system
+
+**`npm run test:watch`**
+```bash
+cd backend
+npm run test:watch
+```
+- Interactive test runner
+- Watches files for changes
+- Re-runs affected tests automatically
+- Great for **Test-Driven Development (TDD)**
+- Press `a` to run all tests
+- Press `p` to filter by filename
+- Press `t` to filter by test name
+- Press `q` to quit
+
+#### Code Quality Scripts
+
+**`npm run lint`**
+```bash
+cd backend
+npm run lint
+```
+- Runs **ESLint** on `/src` directory
+- Checks code style and quality
+- Reports errors and warnings
+- Helps maintain consistent code style
+- **Fix errors:** `npx eslint src/ --fix`
+
+---
+
+### Frontend Scripts
+
+#### Development Scripts
+
+**`npm run dev`**
+```bash
+cd frontend
+npm run dev
+```
+- Starts **Vite** development server
+- Enables **Hot Module Replacement (HMR)**
+- React Fast Refresh for instant updates
+- Opens at `http://localhost:5173`
+- Proxies API requests to backend
+- Source maps for easy debugging
+- **Features:**
+  - ⚡ Lightning-fast HMR
+  - 🔥 React Fast Refresh
+  - 🎨 CSS hot reload
+  - 🐛 Source maps enabled
+
+#### Build Scripts
+
+**`npm run build`**
+```bash
+cd frontend
+npm run build
+```
+- Creates optimized production build
+- Outputs to `/dist` directory
+- **Optimizations:**
+  - Code minification (JS, CSS)
+  - Tree shaking (removes unused code)
+  - Code splitting (lazy loading)
+  - Asset optimization (images)
+  - Gzip compression
+  - Source maps for debugging
+- **Build size:** Typically 300-500KB (gzipped)
+- **Deploy:** Upload `/dist` folder to hosting
+
+**`npm run preview`**
+```bash
+cd frontend
+npm run preview
+```
+- Previews production build locally
+- Serves `/dist` folder
+- Tests production build before deployment
+- Runs on `http://localhost:4173`
+- **Use case:** Verify build works correctly
+- **Note:** Must run `npm run build` first
+
+#### Code Quality Scripts
+
+**`npm run lint`**
+```bash
+cd frontend
+npm run lint
+```
+- Runs **ESLint** on all source files
+- Checks React code quality
+- Enforces coding standards
+- Reports errors and warnings
+- **Includes:**
+  - React best practices
+  - React Hooks rules
+  - Accessibility checks
+  - TailwindCSS class order
+
+---
+
+### Quick Reference Table
+
+#### Backend Commands
+
+| Command | Purpose | When to Use |
+|---------|---------|-------------|
+| `npm run dev` | Start dev server | Daily development |
+| `npm start` | Start production | Production deployment |
+| `npm test` | Run all tests | Before commits/deploys |
+| `npm run test:watch` | Watch mode testing | During TDD workflow |
+| `npm run seed` | Add sample data | Setup dev environment |
+| `npm run seed:dev` | Seed with dev env | Development seeding |
+| `npm run clear-db` | Clear database | Reset for fresh start |
+| `npm run lint` | Check code quality | Before commits |
+
+#### Frontend Commands
+
+| Command | Purpose | When to Use |
+|---------|---------|-------------|
+| `npm run dev` | Start dev server | Daily development |
+| `npm run build` | Create production build | Before deployment |
+| `npm run preview` | Preview build | Test before deploy |
+| `npm run lint` | Check code quality | Before commits |
+
+---
+
+### Common Workflows
+
+#### 🚀 Starting Development
+
+```bash
+# Terminal 1 - Backend
+cd backend
+npm run dev
+
+# Terminal 2 - Frontend
+cd frontend
+npm run dev
+```
+
+#### 🌱 Setting Up Fresh Database
+
+```bash
+cd backend
+npm run clear-db    # Clear existing data
+npm run seed        # Add sample data
+```
+
+#### 🧪 Running Tests
+
+```bash
+cd backend
+npm test           # Run once
+# OR
+npm run test:watch # Watch mode
+```
+
+#### 🏗️ Building for Production
+
+```bash
+# Backend - No build needed (Node.js)
+cd backend
+NODE_ENV=production npm start
+
+# Frontend - Build and preview
+cd frontend
+npm run build
+npm run preview   # Test locally
+```
+
+#### ✅ Pre-Commit Checks
+
+```bash
+# Backend
+cd backend
+npm run lint      # Check code quality
+npm test          # Run tests
+
+# Frontend
+cd frontend
+npm run lint      # Check code quality
+npm run build     # Ensure builds successfully
+```
+
+---
+
 ## 🧪 Testing
 
 ### Backend Tests
@@ -1274,43 +1584,6 @@ netlify deploy --prod --dir=dist
 - [ ] Optimize images
 - [ ] Enable caching
 - [ ] Set up CI/CD pipeline
-
----
-
-## 📚 API Documentation
-
-### Postman Collections
-
-Complete API documentation with examples:
-
-#### 📦 Complete Collection
-[View Complete API Documentation](https://documenter.getpostman.com/view/XXXXXXXX/XXXXXXXXXX)
-
-#### Individual Collections
-
-1. **🔐 Authentication API**
-   - [View Auth Documentation](https://documenter.getpostman.com/view/38185839/2sBXc7M4kf)
-   - Includes: Registration, Login, OAuth, Password Reset
-
-2. **👤 Profile API**
-   - [View Profile Documentation](https://documenter.getpostman.com/view/XXXXXXXX/XXXXXXXXXX)
-   - Includes: Get Profile, Update Profile, Avatar Upload
-
-3. **✅ Tasks API**
-   - [View Tasks Documentation](https://documenter.getpostman.com/view/XXXXXXXX/XXXXXXXXXX)
-   - Includes: CRUD Operations, Filtering, Pagination
-
-4. **🔔 Notifications API**
-   - [View Notifications Documentation](https://documenter.getpostman.com/view/XXXXXXXX/XXXXXXXXXX)
-   - Includes: Get Notifications, Mark as Read, Delete
-
-### Importing Collections
-
-1. Download from Postman links
-2. Import into Postman
-3. Set environment variables:
-   - `base_url`: `http://localhost:3000/api`
-   - `token`: Your JWT token (auto-set after login)
 
 ---
 

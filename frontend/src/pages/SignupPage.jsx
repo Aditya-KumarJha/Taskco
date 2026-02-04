@@ -11,6 +11,14 @@ const SignupPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
+  useEffect(() => {
+    const previous = document.title;
+    document.title = "Taskco — Sign Up";
+    return () => {
+      document.title = previous;
+    };
+  }, []);
+
   const fromEmailCta = location.state?.fromEmailCta && location.state?.email;
 
   if (fromEmailCta && !otpStep && userEmail !== location.state.email) {
