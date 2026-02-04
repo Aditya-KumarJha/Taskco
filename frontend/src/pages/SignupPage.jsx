@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import AnimationPanel from "../components/auth/AnimationPanel";
 import SignupForm from "../components/auth/SignupForm";
