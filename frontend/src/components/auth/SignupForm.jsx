@@ -86,7 +86,6 @@ const SignupForm = ({ setOtpStep, setUserEmail }) => {
       setUserEmail(form.email);
       setOtpStep(true);
     } catch (err) {
-      // Handle validation errors from backend
       if (err.response?.status === 400 && err.response?.data?.errors) {
         const validationErrors = err.response.data.errors;
         const errorMessages = validationErrors.map(e => e.msg).join('. ');

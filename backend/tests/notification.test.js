@@ -14,7 +14,6 @@ describe('Notifications API', () => {
     await dbHandler.connect();
     const email = `test-notif-${Date.now()}@test.com`;
     
-    // Register and verify user
     const registerRes = await api.post('/api/v1/auth/register').send({
       email,
       password: 'TestPass123',
@@ -30,7 +29,6 @@ describe('Notifications API', () => {
     token = verifyRes.body.data.accessToken;
     userId = verifyRes.body.data.user.id;
 
-    // Create test notifications
     const notification = await Notification.create({
       userId,
       type: 'task_created',

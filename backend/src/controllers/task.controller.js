@@ -57,7 +57,7 @@ export const createTask = asyncHandler(async (req, res) => {
 
 export const listTasks = asyncHandler(async (req, res) => {
   const page = Math.max(1, parseInt(req.query.page, 10) || 1);
-  const limit = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 10));
+  const limit = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 100));
   const skip = (page - 1) * limit;
   const { search, status, priority, sort = 'createdAt', order = 'desc' } = req.query;
 
@@ -120,7 +120,7 @@ export const updateTask = asyncHandler(async (req, res) => {
         updates.imageUrl = await uploadFromBuffer(req.file.buffer, req.file.originalname, 'tasks');
       }
     } catch (err) {
-      // Continue without image if upload fails
+      
     }
   }
 

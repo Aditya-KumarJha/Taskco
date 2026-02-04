@@ -21,7 +21,6 @@ const OtpForm = ({ email, context, onVerified }) => {
   );
   const [remainingTime, setRemainingTime] = useState(10 * 60);
 
-  /* Resend cooldown timer */
   useEffect(() => {
     let interval;
     if (resendDisabled) {
@@ -39,7 +38,6 @@ const OtpForm = ({ email, context, onVerified }) => {
     return () => clearInterval(interval);
   }, [resendDisabled]);
 
-  /* OTP expiry countdown */
   useEffect(() => {
     if (!expiresAt) return;
 
@@ -100,7 +98,6 @@ const OtpForm = ({ email, context, onVerified }) => {
           toast.success('Login successful! Welcome back');
         }
 
-        // After successful register or login, redirect to browse gigs
         navigate("/");
       }
     } catch (err) {

@@ -21,5 +21,6 @@ export const upload = multer({
 });
 
 export const singleImage = upload.single('image');
+export const singleAvatar = upload.single('avatar');
 
 export default upload;

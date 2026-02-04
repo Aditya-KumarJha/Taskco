@@ -2,7 +2,7 @@ import clsx from "clsx";
 import gsap from "gsap";
 import { useWindowScroll } from "react-use";
 import { useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Home,
   PlusCircle,
@@ -12,16 +12,22 @@ import {
 } from "lucide-react";
 import { HiMenuAlt3, HiX } from "react-icons/hi";
 import { TiLocationArrow } from "react-icons/ti";
-import { useNavigate } from "react-router-dom";
+import { useSelector, useDispatch } from "react-redux";
 
 import Button from "./ui/Button";
+import { fetchNotifications } from "../store/notificationSlice";
 
 const navItems = [
   { label: "Home", path: "/", icon: Home },
-  { label: "Create Task", path: "/tasks/create", icon: PlusCircle },
+  { label: "Create Task", path: "/create-task", icon: PlusCircle },
   { label: "View Tasks", path: "/tasks", icon: ListTodo },
   { label: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
-  { label: "Notification", path: "/notification", icon: Bell },
+  {
+    label: "Notifications",
+    path: "/notifications",
+    icon: Bell,
+    showBadge: true,
+  },
 ];
 
 const NavBar = () => {
@@ -32,21 +38,37 @@ const NavBar = () => {
   const audioElementRef = useRef(null);
   const navContainerRef = useRef(null);
 
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
   const { y: currentScrollY } = useWindowScroll();
   const [isNavVisible, setIsNavVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
+
+  const { unreadCount } = useSelector((state) => state.notifications);
+  const { isAuthenticated } = useSelector((state) => state.auth);
 
   const toggleAudioIndicator = () => {
     setIsAudioPlaying((prev) => !prev);
     setIsIndicatorActive((prev) => !prev);
   };
 
-  const navigate = useNavigate();
+  useEffect(() => {
+    if (isAuthenticated) {
+      dispatch(fetchNotifications());
+      const interval = setInterval(
+        () => dispatch(fetchNotifications()),
+        30000
+      );
+      return () => clearInterval(interval);
+    }
+  }, [dispatch, isAuthenticated]);
 
   useEffect(() => {
     if (!audioElementRef.current) return;
-    if (isAudioPlaying) audioElementRef.current.play();
-    else audioElementRef.current.pause();
+    isAudioPlaying
+      ? audioElementRef.current.play()
+      : audioElementRef.current.pause();
   }, [isAudioPlaying]);
 
   useEffect(() => {
@@ -78,42 +100,50 @@ const NavBar = () => {
   return (
     <div
       ref={navContainerRef}
-      className="fixed inset-x-0 top-4 z-50 h-16 border-none transition-all duration-700 sm:inset-x-6"
+      className="fixed inset-x-0 top-4 z-50 h-16 transition-all duration-700 sm:inset-x-6"
     >
       <header className="absolute top-1/2 w-full -translate-y-1/2">
         <nav className="flex size-full items-center justify-between p-4">
           <div className="flex items-center gap-7">
             <Link to="/">
-              <img src="/img/logo.png" alt="logo" className="w-20 cursor-pointer" />
+              <img
+                src="/img/logo.png"
+                alt="logo"
+                className="w-20 cursor-pointer"
+              />
             </Link>
 
             <Button
               id="dashboard-button"
               title="Dashboard"
               rightIcon={<TiLocationArrow />}
-              containerClass="bg-blue-50 text-black md:flex hidden items-center justify-center gap-1"
-              to="/dashboard"
+              containerClass="bg-blue-50 text-black hidden md:flex items-center gap-1"
               onClick={() => navigate("/dashboard")}
             />
           </div>
 
           <div className="flex items-center">
             <div className="hidden md:flex items-center gap-6">
-              {navItems.map(({ label, path, icon: Icon }) => (
+              {navItems.map(({ label, path, icon: Icon, showBadge }) => (
                 <Link
                   key={label}
                   to={path}
-                  className="nav-hover-btn text-black flex items-center gap-2"
+                  className="nav-hover-btn text-black flex items-center gap-2 relative"
                 >
                   <Icon size={18} />
                   <span>{label}</span>
+                  {showBadge && unreadCount > 0 && (
+                    <span className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+                      {unreadCount > 9 ? "9+" : unreadCount}
+                    </span>
+                  )}
                 </Link>
               ))}
             </div>
 
             <button
               onClick={toggleAudioIndicator}
-              className="ml-6 hidden md:flex items-center space-x-0.5 scale-150"
+              className="ml-6 hidden md:flex items-center space-x-1 scale-150"
             >
               <audio
                 ref={audioElementRef}
@@ -144,15 +174,20 @@ const NavBar = () => {
         {isMobileMenuOpen && (
           <div className="absolute left-0 top-full mt-2 w-full rounded-lg bg-transparent p-6 backdrop-blur-md md:hidden">
             <div className="flex flex-col gap-4">
-              {navItems.map(({ label, path, icon: Icon }) => (
+              {navItems.map(({ label, path, icon: Icon, showBadge }) => (
                 <Link
                   key={label}
                   to={path}
-                  className="text-black text-lg flex items-center gap-3"
+                  className="text-black text-lg flex items-center gap-3 relative"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   <Icon size={20} />
                   <span>{label}</span>
+                  {showBadge && unreadCount > 0 && (
+                    <span className="ml-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+                      {unreadCount > 9 ? "9+" : unreadCount}
+                    </span>
+                  )}
                 </Link>
               ))}
             </div>

@@ -110,7 +110,6 @@ const ForgotPassword = ({ email, setEmail, onBack }) => {
           <p className="text-sm text-gray-600 mb-2">Or sign in using your {providerHint} account</p>
           <button
             onClick={() => {
-              // Redirect to backend OAuth entrypoint which will start the provider flow
               const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
               window.location.href = `${baseUrl}/api/v1/auth/${providerHint}`;
             }}

@@ -15,16 +15,14 @@ describe('Tasks API', () => {
     await dbHandler.connect();
     const email = `test-tasks-${Date.now()}@test.com`;
     
-    // Register user
     const registerRes = await api.post('/api/v1/auth/register').send({
       email,
       password: 'TestPass123',
       fullName: { firstName: 'Tasks', lastName: 'Test' },
     });
     
-    const otp = registerRes.body.data.otp; // In test mode, OTP is returned
-    
-    // Verify OTP
+    const otp = registerRes.body.data.otp; 
+
     const verifyRes = await api.post('/api/v1/auth/verify-register-otp').send({
       email,
       otp,
@@ -116,7 +114,6 @@ describe('Tasks API', () => {
 
   describe('Task Filters and Search', () => {
     beforeAll(async () => {
-      // Create tasks with different statuses and priorities
       await api
         .post('/api/v1/tasks')
         .set('Authorization', `Bearer ${token}`)
@@ -166,7 +163,6 @@ describe('Tasks API', () => {
     let otherUserTaskId;
 
     beforeAll(async () => {
-      // Create another user
       const email = `test-other-${Date.now()}@test.com`;
       const registerRes = await api.post('/api/v1/auth/register').send({
         email,
@@ -180,7 +176,6 @@ describe('Tasks API', () => {
       });
       otherUserToken = verifyRes.body.data.accessToken;
 
-      // Create a task as the other user
       const taskRes = await api
         .post('/api/v1/tasks')
         .set('Authorization', `Bearer ${otherUserToken}`)

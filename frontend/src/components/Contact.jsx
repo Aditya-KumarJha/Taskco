@@ -31,7 +31,7 @@ const Contact = () => {
 
         <div className="flex flex-col items-center text-center">
           <p className="mb-10 font-general text-[10px] lg:text-[20px] uppercase">
-            Join Zentry
+            Join Taskco
           </p>
 
           <AnimatedTitle

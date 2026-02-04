@@ -25,7 +25,6 @@ const AnimationPanel = ({ page = "signup" }) => {
           : "Join Taskco to organize your work, manage tasks effortlessly, and stay in control."}
       </p>
 
-      {/* Animations */}
       <div className="hidden xl:flex gap-8 z-10 mt-4">
         {animations.map((anim, i) => (
           <motion.div

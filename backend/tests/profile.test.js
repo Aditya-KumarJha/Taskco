@@ -13,16 +13,14 @@ describe('Profile API', () => {
     await dbHandler.connect();
     const email = `test-profile-${Date.now()}@test.com`;
     
-    // Register user
     const registerRes = await api.post('/api/v1/auth/register').send({
       email,
       password: 'TestPass123',
       fullName: { firstName: 'Profile', lastName: 'Test' },
     });
     
-    const otp = registerRes.body.data.otp; // In test mode, OTP is returned
+    const otp = registerRes.body.data.otp; 
     
-    // Verify OTP
     const verifyRes = await api.post('/api/v1/auth/verify-register-otp').send({
       email,
       otp,
@@ -72,7 +70,6 @@ describe('Profile API', () => {
     });
 
     it('should reject duplicate username', async () => {
-      // Create another user with a username
       const anotherEmail = `test-another-${Date.now()}@test.com`;
       const registerRes = await api.post('/api/v1/auth/register').send({
         email: anotherEmail,
@@ -86,7 +83,6 @@ describe('Profile API', () => {
         otp,
       });
 
-      // Try to update to existing username
       const res = await api
         .put('/api/v1/me')
         .set('Authorization', `Bearer ${token}`)

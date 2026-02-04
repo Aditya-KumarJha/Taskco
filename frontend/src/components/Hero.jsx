@@ -174,7 +174,7 @@ const Hero = () => {
               id="get-started-button"
               title={isAuthenticated ? 'Log out' : 'Get started'}
               leftIcon={<TiLocationArrow />}
-              containerClass={isAuthenticated ? 'bg-red-500 text-white flex-center gap-1' : 'bg-yellow-300 flex-center gap-1'}
+              containerClass={isAuthenticated ? 'text-black flex-center gap-1' : 'bg-yellow-300 flex-center gap-1'}
               onClick={() => (isAuthenticated ? handleLogout() : navigate('/signup'))}
             />
           </div>

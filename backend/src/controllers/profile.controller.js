@@ -1,6 +1,5 @@
 import { getProfileUser, updateProfileUser } from '../services/auth.service.js';
 import { uploadImage } from '../services/imagekit.service.js';
-import { logger } from '../utils/logger.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { NotFound } from '../utils/ApiError.js';
 import User from '../models/user.model.js';
