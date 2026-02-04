@@ -143,7 +143,6 @@ const TaskForm = ({ initialData = {}, onSubmit, onCancel, loading = false }) => 
         error={errors.dueDate}
       />
 
-      {/* Image Upload */}
       <div className="w-full">
         <label className="mb-2 block font-general text-sm uppercase tracking-wide text-white/90">
           Task Image
@@ -212,7 +211,6 @@ const TaskForm = ({ initialData = {}, onSubmit, onCancel, loading = false }) => 
         )}
       </div>
 
-      {/* Actions */}
       <div className="flex gap-4">
         <Button
           type="submit"

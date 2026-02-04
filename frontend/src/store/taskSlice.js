@@ -8,7 +8,6 @@ export const fetchTasks = createAsyncThunk(
     if (status) params.append('status', status);
     if (priority) params.append('priority', priority);
     
-    // Parse sort parameter - handle formats like '-createdAt' or 'createdAt'
     if (sort) {
       let sortField = sort;
       let sortOrder = 'desc';
@@ -126,19 +125,16 @@ const taskSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Fetch tasks
       .addCase(fetchTasks.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
       .addCase(fetchTasks.fulfilled, (state, action) => {
         state.loading = false;
-        // Backend returns { success: true, data: { tasks: [...], pagination: {...} } }
         const responseData = action.payload;
         const tasksData = responseData?.tasks || [];
         state.tasks = Array.isArray(tasksData) ? tasksData : [];
 
-        // Calculate stats safely
         const tasks = state.tasks || [];
         state.stats = {
           total: tasks.length,

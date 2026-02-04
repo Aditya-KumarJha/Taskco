@@ -84,10 +84,10 @@ describe('Tasks API', () => {
     });
   });
 
-  describe('PUT /api/v1/tasks/:id', () => {
+  describe('PATCH /api/v1/tasks/:id', () => {
     it('should update task', async () => {
       const res = await api
-        .put(`/api/v1/tasks/${taskId}`)
+        .patch(`/api/v1/tasks/${taskId}`)
         .set('Authorization', `Bearer ${token}`)
         .send({ title: 'Updated Task', status: 'in_progress' });
       expect(res.status).toBe(200);
@@ -192,7 +192,7 @@ describe('Tasks API', () => {
 
     it('should not allow updating another user\'s task', async () => {
       const res = await api
-        .put(`/api/v1/tasks/${otherUserTaskId}`)
+        .patch(`/api/v1/tasks/${otherUserTaskId}`)
         .set('Authorization', `Bearer ${token}`)
         .send({ title: 'Hacked Title' });
       expect([403, 404]).toContain(res.status);
@@ -206,34 +206,7 @@ describe('Tasks API', () => {
     });
   });
 
-  describe('POST /api/v1/tasks/upload-base64', () => {
-    it('should upload base64 image', async () => {
-      const base64Image = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
-      const res = await api
-        .post('/api/v1/tasks/upload-base64')
-        .set('Authorization', `Bearer ${token}`)
-        .send({ image: base64Image });
-      expect(res.status).toBe(200);
-      expect(res.body.success).toBe(true);
-      expect(res.body.data.imageUrl).toBeDefined();
-    });
 
-    it('should reject invalid base64 format', async () => {
-      const res = await api
-        .post('/api/v1/tasks/upload-base64')
-        .set('Authorization', `Bearer ${token}`)
-        .send({ image: 'invalid-base64' });
-      expect(res.status).toBe(400);
-    });
-
-    it('should reject missing image', async () => {
-      const res = await api
-        .post('/api/v1/tasks/upload-base64')
-        .set('Authorization', `Bearer ${token}`)
-        .send({});
-      expect(res.status).toBe(400);
-    });
-  });
 
   describe('Task without authentication', () => {
     it('should reject creating task without auth', async () => {

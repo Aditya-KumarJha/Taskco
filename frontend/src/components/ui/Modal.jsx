@@ -18,7 +18,6 @@ const Modal = ({ isOpen, onClose, title, children, size = "md" }) => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
       
-      // Animate in
       gsap.fromTo(
         overlayRef.current,
         { opacity: 0 },
@@ -40,7 +39,6 @@ const Modal = ({ isOpen, onClose, title, children, size = "md" }) => {
   }, [isOpen]);
 
   const handleClose = () => {
-    // Animate out
     gsap.to(overlayRef.current, {
       opacity: 0,
       duration: 0.2,
@@ -73,7 +71,6 @@ const Modal = ({ isOpen, onClose, title, children, size = "md" }) => {
         )}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
         {title && (
           <div className="border-b border-white/10 px-6 py-4">
             <h2 className="special-font font-zentry text-2xl font-black uppercase text-white md:text-3xl">
@@ -82,12 +79,10 @@ const Modal = ({ isOpen, onClose, title, children, size = "md" }) => {
           </div>
         )}
 
-        {/* Body */}
         <div className="max-h-[calc(100vh-200px)] overflow-y-auto px-6 py-6">
           {children}
         </div>
 
-        {/* Close button */}
         <button
           onClick={handleClose}
           className="group absolute right-4 top-4 flex size-10 items-center justify-center rounded-full border border-white/20 bg-black/40 text-white transition-all duration-300 hover:scale-110 hover:border-red-400 hover:bg-red-500/20"

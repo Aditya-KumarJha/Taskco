@@ -1,7 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '../utils/api';
 
-// Async thunks
 export const fetchNotifications = createAsyncThunk(
   'notifications/fetchNotifications',
   async () => {
@@ -52,7 +51,6 @@ const notificationSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Fetch notifications
       .addCase(fetchNotifications.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -68,7 +66,6 @@ const notificationSlice = createSlice({
         state.error = action.error.message;
       })
       
-      // Mark as read
       .addCase(markAsRead.fulfilled, (state, action) => {
         const notification = action.payload.data?.notification || action.payload.notification || action.payload;
         const index = state.notifications.findIndex(n => n._id === notification._id);
@@ -81,13 +78,11 @@ const notificationSlice = createSlice({
         }
       })
       
-      // Mark all as read
       .addCase(markAllAsRead.fulfilled, (state) => {
         state.notifications = state.notifications.map(n => ({ ...n, read: true }));
         state.unreadCount = 0;
       })
       
-      // Delete notification
       .addCase(deleteNotification.fulfilled, (state, action) => {
         const notificationId = action.payload;
         const notification = state.notifications.find(n => n._id === notificationId);

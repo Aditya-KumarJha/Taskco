@@ -8,7 +8,7 @@ const TaskCard = ({ task, onClick, index = 0 }) => {
   const cardRef = useRef(null);
 
   useEffect(() => {
-    // Stagger animation on mount
+    
     gsap.fromTo(
       cardRef.current,
       {
@@ -51,10 +51,8 @@ const TaskCard = ({ task, onClick, index = 0 }) => {
         onClick={onClick}
         className="group relative overflow-hidden"
       >
-        {/* Animated gradient background on hover */}
         <div className="absolute inset-0 -z-10 bg-gradient-to-br from-violet-300/10 via-transparent to-yellow-300/10 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
 
-        {/* Priority indicator bar */}
         <div
           className={`absolute left-0 top-0 h-full w-1 ${
             task.priority === "high"
@@ -66,7 +64,6 @@ const TaskCard = ({ task, onClick, index = 0 }) => {
         />
 
         <div className="ml-2">
-          {/* Header */}
           <div className="mb-4 flex items-start justify-between gap-4">
             <h3 className="special-font flex-1 font-zentry text-xl font-black uppercase leading-tight text-white md:text-2xl">
               {task.title}
@@ -78,14 +75,12 @@ const TaskCard = ({ task, onClick, index = 0 }) => {
             </div>
           </div>
 
-          {/* Description */}
           {task.description && (
             <p className="mb-4 line-clamp-2 font-circular-web text-sm text-white/70">
               {task.description}
             </p>
           )}
 
-          {/* Image preview */}
           {task.imageUrl && (
             <div className="mb-4 overflow-hidden rounded-lg">
               <img
@@ -96,7 +91,6 @@ const TaskCard = ({ task, onClick, index = 0 }) => {
             </div>
           )}
 
-          {/* Footer */}
           <div className="flex flex-wrap items-center gap-3 font-circular-web text-xs text-white/60">
             <div className="flex items-center gap-1">
               <span>{priorityIcons[task.priority]}</span>

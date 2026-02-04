@@ -50,10 +50,10 @@ describe('Profile API', () => {
     });
   });
 
-  describe('PUT /api/v1/me', () => {
+  describe('PATCH /api/v1/me', () => {
     it('should update profile', async () => {
       const res = await api
-        .put('/api/v1/me')
+        .patch('/api/v1/me')
         .set('Authorization', `Bearer ${token}`)
         .send({ fullName: { firstName: 'Updated', lastName: 'Name' } });
       expect(res.status).toBe(200);
@@ -62,7 +62,7 @@ describe('Profile API', () => {
 
     it('should update username', async () => {
       const res = await api
-        .put('/api/v1/me')
+        .patch('/api/v1/me')
         .set('Authorization', `Bearer ${token}`)
         .send({ username: 'newusername123' });
       expect(res.status).toBe(200);
@@ -84,7 +84,7 @@ describe('Profile API', () => {
       });
 
       const res = await api
-        .put('/api/v1/me')
+        .patch('/api/v1/me')
         .set('Authorization', `Bearer ${token}`)
         .send({ username: 'existingusername' });
       expect(res.status).toBe(409);
@@ -92,7 +92,7 @@ describe('Profile API', () => {
 
     it('should return 401 without token', async () => {
       const res = await api
-        .put('/api/v1/me')
+        .patch('/api/v1/me')
         .send({ fullName: { firstName: 'No', lastName: 'Auth' } });
       expect(res.status).toBe(401);
     });

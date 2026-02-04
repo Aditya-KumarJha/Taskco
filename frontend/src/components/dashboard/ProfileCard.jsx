@@ -10,7 +10,6 @@ const ProfileCard = ({ user, onUpdate }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   
-  // Helper to get display name
   const getDisplayName = (fullName) => {
     if (!fullName) return "";
     if (typeof fullName === 'string') return fullName;
@@ -76,7 +75,6 @@ const ProfileCard = ({ user, onUpdate }) => {
     try {
       const data = new FormData();
       
-      // Convert fullName string back to object format for backend
       const nameParts = formData.fullName.trim().split(' ');
       const fullNameObj = {
         firstName: nameParts[0] || '',
@@ -106,7 +104,6 @@ const ProfileCard = ({ user, onUpdate }) => {
       toast.success("Profile updated successfully!");
       setIsEditing(false);
       
-      // Clear password fields after successful update
       setFormData(prev => ({
         ...prev,
         currentPassword: "",
@@ -140,7 +137,6 @@ const ProfileCard = ({ user, onUpdate }) => {
 
         {!isEditing ? (
           <div className="flex flex-col items-center text-center sm:flex-row sm:text-left">
-            {/* Avatar */}
             <div className="mb-4 flex-shrink-0 sm:mb-0 sm:mr-6">
               {avatarPreview ? (
                 <img
@@ -157,7 +153,6 @@ const ProfileCard = ({ user, onUpdate }) => {
               )}
             </div>
 
-            {/* Info */}
             <div className="flex-1">
               <h3 className="special-font mb-1 font-zentry text-2xl font-black uppercase text-white md:text-3xl">
                 {getDisplayName(user?.fullName) || "User"}
@@ -172,7 +167,6 @@ const ProfileCard = ({ user, onUpdate }) => {
               </p>
             </div>
 
-            {/* Edit Button */}
             <Button
               onClick={() => setIsEditing(true)}
               title="Edit Profile"
@@ -181,7 +175,6 @@ const ProfileCard = ({ user, onUpdate }) => {
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Avatar Upload */}
             <div className="flex flex-col items-center gap-4">
               {avatarPreview ? (
                 <div className="relative">

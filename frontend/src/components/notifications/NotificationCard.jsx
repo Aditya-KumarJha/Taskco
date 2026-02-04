@@ -7,7 +7,7 @@ const NotificationCard = ({ notification, onMarkAsRead, onDelete, index = 0 }) =
   const cardRef = useRef(null);
 
   useEffect(() => {
-    // Stagger animation on mount
+    
     gsap.fromTo(
       cardRef.current,
       {
@@ -128,18 +128,15 @@ const NotificationCard = ({ notification, onMarkAsRead, onDelete, index = 0 }) =
           !notification.read ? "border-violet-300/40 bg-gradient-to-br from-violet-300/10 to-black/20" : ""
         }`}
       >
-        {/* Unread indicator */}
         {!notification.read && (
           <div className="absolute left-0 top-0 h-full w-1 rounded-l-2xl bg-violet-300" />
         )}
 
         <div className="flex gap-4">
-          {/* Icon */}
           <div className="flex-shrink-0">
             {getNotificationIcon(notification.type)}
           </div>
 
-          {/* Content */}
           <div className="flex-1">
             <p className="font-general text-base text-white">
               {notification.message}
@@ -157,7 +154,6 @@ const NotificationCard = ({ notification, onMarkAsRead, onDelete, index = 0 }) =
             </p>
           </div>
 
-          {/* Actions */}
           <div className="flex flex-shrink-0 items-start gap-2">
             {!notification.read && (
               <button

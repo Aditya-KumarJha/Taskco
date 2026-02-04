@@ -78,7 +78,6 @@ const NotificationList = ({
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div
         ref={headerRef}
         className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
@@ -103,7 +102,6 @@ const NotificationList = ({
         )}
       </div>
 
-      {/* Notification List */}
       <div className="space-y-4">
         {notifications.map((notification, index) => (
           <NotificationCard

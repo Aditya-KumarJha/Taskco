@@ -23,7 +23,6 @@ const Dashboard = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Fetch initial data
     dispatch(fetchTasks());
     dispatch(fetchNotifications());
     if (!user) {
@@ -32,14 +31,12 @@ const Dashboard = () => {
   }, [dispatch, user]);
 
   useEffect(() => {
-    // Hero animation
     gsap.fromTo(
       ".dashboard-hero",
       { opacity: 0, y: 50 },
       { opacity: 1, y: 0, duration: 1, ease: "power3.out" }
     );
 
-    // Floating background animation
     gsap.to(".float-bg", {
       y: -20,
       x: 10,
@@ -55,7 +52,7 @@ const Dashboard = () => {
     try {
       await api.post("/api/v1/auth/logout");
     } catch (e) {
-      // ignore network errors, still clear client state
+
     }
     dispatch(setLoggedOut());
     toast.success("Logout successful");
@@ -78,7 +75,6 @@ const Dashboard = () => {
       </div>
 
       <div className="container mt-10 relative z-10 mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Hero Section */}
         <div className="dashboard-hero mb-12">
           <div className="mb-6 flex items-center justify-between">
             <AnimatedTitle
@@ -98,7 +94,6 @@ const Dashboard = () => {
             Welcome back! Here's an overview of your tasks and activities.
           </p>
 
-          {/* Quick Stats Banner */}
           {unreadCount > 0 && (
             <div className="mt-6 inline-flex items-center gap-3 rounded-full border border-violet-300/40 bg-gradient-to-r from-violet-300/20 to-violet-300/5 px-6 py-3 backdrop-blur-sm">
               <div className="relative flex size-10 items-center justify-center">
@@ -124,22 +119,18 @@ const Dashboard = () => {
           )}
         </div>
 
-        {/* Profile Section */}
         <div className="mb-12">
           <ProfileCard user={user} onUpdate={handleProfileUpdate} />
         </div>
 
-        {/* Stats Section */}
         <div className="mb-12">
           <StatsCard stats={stats} />
         </div>
 
-        {/* Quick Actions Section */}
         <div className="mb-12">
           <QuickActions />
         </div>
 
-        {/* Recent Activity Card */}
         <div className="rounded-2xl border border-white/20 bg-gradient-to-br from-black/40 to-black/20 p-8 backdrop-blur-sm">
           <div className="absolute inset-0 -z-10 bg-gradient-to-br from-violet-300/5 via-transparent to-yellow-300/5 rounded-2xl" />
           
@@ -148,7 +139,6 @@ const Dashboard = () => {
           </h2>
 
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-            {/* Productivity Tips */}
             <div className="space-y-4">
               <h3 className="font-general text-sm uppercase tracking-wide text-violet-300">
                 Productivity Tips
@@ -173,7 +163,6 @@ const Dashboard = () => {
               </div>
             </div>
 
-            {/* Task Summary */}
             <div className="space-y-4">
               <h3 className="font-general text-sm uppercase tracking-wide text-yellow-300">
                 Task Summary
