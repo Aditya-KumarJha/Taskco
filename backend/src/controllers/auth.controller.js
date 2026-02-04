@@ -13,11 +13,13 @@ import {
 import { publishToQueue } from '../broker/broker.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 const setTokenCookie = (res, token) => {
+  const isProduction = process.env.NODE_ENV === 'production';
   res.cookie('token', token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    secure: isProduction,
+    sameSite: isProduction ? 'none' : 'lax',
     maxAge: 7 * 24 * 60 * 60 * 1000,
+    path: '/',
   });
 };
 
@@ -179,14 +181,17 @@ export const oauthCallback = (provider) =>
         username: user.username,
       });
     }
-    res.redirect(process.env.FRONTEND_URL || '/');
+    const redirectUrl = `${process.env.FRONTEND_URL || '/'}?auth=success`;
+    res.redirect(redirectUrl);
   });
 
 export const logout = asyncHandler(async (req, res) => {
+  const isProduction = process.env.NODE_ENV === 'production';
   res.clearCookie('token', {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    secure: isProduction,
+    sameSite: isProduction ? 'none' : 'lax',
+    path: '/',
   });
   return res.status(200).json({
     success: true,

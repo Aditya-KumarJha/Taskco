@@ -24,6 +24,14 @@ function App() {
 
   useEffect(() => {
     dispatch(verifySession());
+    
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('auth') === 'success') {
+      setTimeout(() => {
+        dispatch(verifySession());
+      }, 500);
+      window.history.replaceState({}, '', window.location.pathname);
+    }
   }, [dispatch]);
 
   useEffect(() => {

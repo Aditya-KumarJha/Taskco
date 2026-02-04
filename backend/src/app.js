@@ -23,7 +23,12 @@ app.use(
         'http://localhost:5174',
       ].filter(Boolean);
       
-      if (!origin || allowedOrigins.includes(origin)) {
+      const isVercelDomain = origin && (
+        origin.endsWith('.vercel.app') || 
+        origin.includes('vercel.app')
+      );
+      
+      if (!origin || allowedOrigins.includes(origin) || isVercelDomain) {
         callback(null, true);
       } else {
         callback(new Error('Not allowed by CORS'));
