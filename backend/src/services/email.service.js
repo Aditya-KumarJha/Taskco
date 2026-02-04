@@ -42,7 +42,7 @@ export const sendEmail = async ({ to, subject, text, html }) => {
     return info;
   } catch (error) {
     logger.error('Send email error:', error.message);
-    throw error;
+    return null;
   }
 };
 
