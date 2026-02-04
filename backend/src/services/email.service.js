@@ -12,11 +12,19 @@ if (process.env.EMAIL_USER) {
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
       refreshToken: process.env.REFRESH_TOKEN,
+      accessToken: process.env.ACCESS_TOKEN,
+    },
+    tls: {
+      rejectUnauthorized: process.env.NODE_ENV === 'production',
     },
   });
   transporter.verify((err) => {
-    if (err) logger.error('Email server verify error:', err.message);
-    else logger.info('Email server ready');
+    if (err) {
+      logger.error('Email server verify error:', err.message);
+      logger.error('Full error:', JSON.stringify(err, null, 2));
+    } else {
+      logger.info('Email server ready');
+    }
   });
 }
 
@@ -42,6 +50,8 @@ export const sendEmail = async ({ to, subject, text, html }) => {
     return info;
   } catch (error) {
     logger.error('Send email error:', error.message);
+    logger.error('Error code:', error.code);
+    logger.error('Error response:', error.response);
     return null;
   }
 };
