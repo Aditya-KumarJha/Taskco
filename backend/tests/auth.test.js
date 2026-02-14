@@ -10,6 +10,7 @@ describe('Auth API', () => {
   });
 
   afterAll(async () => {
+    await new Promise(resolve => setTimeout(resolve, 100));
     await dbHandler.closeDatabase();
   });
 
@@ -174,7 +175,6 @@ describe('Auth API', () => {
     });
 
     it('should reject for already verified user', async () => {
-      // Create and verify a new user
       const verifiedEmail = `test-verified-${Date.now()}@test.com`;
       const registerRes = await api.post('/api/v1/auth/register').send({
         email: verifiedEmail,
@@ -187,7 +187,6 @@ describe('Auth API', () => {
         otp,
       });
 
-      // Try to resend OTP
       const res = await api.post('/api/v1/auth/resend-otp').send({
         email: verifiedEmail,
       });

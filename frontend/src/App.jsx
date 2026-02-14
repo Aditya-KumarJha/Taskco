@@ -14,6 +14,14 @@ import LoginPage from "./pages/LoginPage";
 
 import { verifySession } from "./store/authSlice";
 
+const checkCookie = () => {
+  try {
+    return document.cookie.split(';').some(c => c.trim().startsWith('token='));
+  } catch (e) {
+    return false;
+  }
+};
+
 function App() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -82,6 +90,29 @@ function App() {
 
   const hideHeaderPaths = ["/login", "/signup"];
   const shouldShowNav = !hideHeaderPaths.includes(location.pathname);
+
+  const publicPaths = ["/", "/login", "/signup"];
+  const currentPath = location.pathname;
+  const isPublic = publicPaths.some(
+    (p) => currentPath === p || currentPath.startsWith(p + "/")
+  );
+
+  // Show loading for protected routes until auth is verified
+  // Only if there's no cookie (prevents flash on initial load)
+  if (!auth.checked && !isPublic && !checkCookie()) {
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100vh',
+        fontSize: '1.2rem',
+        color: '#666'
+      }}>
+        Loading...
+      </div>
+    );
+  }
 
   return (
     <>

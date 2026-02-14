@@ -19,12 +19,25 @@ export const connect = async () => {
  * Drop database, close the connection and stop mongod.
  */
 export const closeDatabase = async () => {
-  if (mongoose.connection.readyState !== 0) {
-    await mongoose.connection.dropDatabase();
-    await mongoose.connection.close();
-  }
-  if (mongoServer) {
-    await mongoServer.stop();
+  try {
+    if (mongoose.connection.readyState !== 0) {
+      await mongoose.connection.dropDatabase();
+      await mongoose.connection.close(true); // Force close
+    }
+    if (mongoServer) {
+      await mongoServer.stop({ doCleanup: true, force: true });
+    }
+    
+    await mongoose.disconnect();
+  } catch (error) {
+    console.error('Error closing database:', error);
+    if (mongoServer) {
+      try {
+        await mongoServer.stop({ force: true });
+      } catch (e) {
+        
+      }
+    }
   }
 };
 

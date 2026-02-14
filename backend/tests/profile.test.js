@@ -31,6 +31,8 @@ describe('Profile API', () => {
   });
 
   afterAll(async () => {
+    // Wait for any pending operations to complete
+    await new Promise(resolve => setTimeout(resolve, 100));
     await dbHandler.closeDatabase();
   });
 
