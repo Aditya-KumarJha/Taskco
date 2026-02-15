@@ -97,21 +97,12 @@ function App() {
     (p) => currentPath === p || currentPath.startsWith(p + "/")
   );
 
-  // Show loading for protected routes until auth is verified
-  // Only if there's no cookie (prevents flash on initial load)
   if (!auth.checked && !isPublic && !checkCookie()) {
-    return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        height: '100vh',
-        fontSize: '1.2rem',
-        color: '#666'
-      }}>
-        Loading...
-      </div>
-    );
+    navigate("/login", {
+      replace: true,
+      state: { from: currentPath },
+    });
+    return null;
   }
 
   return (
