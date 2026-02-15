@@ -1,7 +1,8 @@
 import amqplib from 'amqplib';
 import { logger } from '../utils/logger.js';
 
-let channel = null;
+let publishChannel = null;
+let consumeChannel = null;
 let connection = null;
 
 export async function connect() {
@@ -12,11 +13,17 @@ export async function connect() {
   }
   try {
     connection = await amqplib.connect(process.env.RABBITMQ_URL);
-    channel = await connection.createChannel();
+    
+    publishChannel = await connection.createChannel();
+    consumeChannel = await connection.createChannel();
+    
+    await consumeChannel.prefetch(1);
+    
     connection.on('close', () => {
       logger.warn('RabbitMQ connection closed');
       connection = null;
-      channel = null;
+      publishChannel = null;
+      consumeChannel = null;
     });
     connection.on('error', (err) => {
       logger.error('RabbitMQ error:', err);
@@ -30,70 +37,65 @@ export async function connect() {
 }
 
 export async function publishToQueue(queueName, data = {}) {
-  if (!channel && !connection) {
+  if (!publishChannel && !connection) {
     await connect();
   }
-  if (!channel) {
+  if (!publishChannel) {
     logger.warn('Broker not available; message not sent:', queueName);
     return;
   }
   try {
-    await channel.assertQueue(queueName, { durable: true });
-    channel.sendToQueue(queueName, Buffer.from(JSON.stringify(data)), { persistent: true });
+    await publishChannel.assertQueue(queueName, { durable: true });
+    publishChannel.sendToQueue(queueName, Buffer.from(JSON.stringify(data)), { persistent: true });
+    logger.info(`📤 Message published to ${queueName}`);
   } catch (error) {
     logger.error('Publish to queue error:', error.message);
   }
 }
 
 export async function subscribeToQueue(queueName, callback) {
-  if (!channel && !connection) {
+  if (!consumeChannel && !connection) {
     await connect();
   }
-  if (!channel) {
+  if (!consumeChannel) {
     logger.warn('Broker not available; consumer not started:', queueName);
     return;
   }
   try {
-    const q = await channel.assertQueue(queueName, { durable: true });
+    const q = await consumeChannel.assertQueue(queueName, { durable: true });
     logger.info(`Queue ${queueName} has ${q.messageCount} messages waiting`);
     
-    channel.prefetch(1);
+    const consumerInfo = await consumeChannel.consume(
+      queueName,
+      async (msg) => {
+        if (msg === null) {
+          logger.warn(`Consumer ${queueName} cancelled by server`);
+          return;
+        }
+        
+        logger.info(`📥 Message received from ${queueName}`);
+        
+        try {
+          const data = JSON.parse(msg.content.toString());
+          await callback(data);
+          consumeChannel.ack(msg);
+          logger.info(`✅ Message acknowledged for ${queueName}`);
+        } catch (err) {
+          logger.error(`❌ Consumer ${queueName} error:`, err.message);
+          logger.error('Full error:', err);
+          consumeChannel.nack(msg, false, true);
+        }
+      },
+      { 
+        noAck: false,
+        consumerTag: `taskco-${queueName}-${Date.now()}`
+      }
+    );
     
-    const testMsg = await channel.get(queueName, { noAck: false });
-    if (testMsg) {
-      logger.info(`🧪 TEST: Found message in queue ${queueName}, processing manually`);
-      try {
-        const data = JSON.parse(testMsg.content.toString());
-        await callback(data);
-        channel.ack(testMsg);
-        logger.info(`✅ TEST message processed for ${queueName}`);
-      } catch (err) {
-        logger.error(`TEST message error:`, err);
-        channel.nack(testMsg, false, true);
-      }
-    }
-    
-    const consumerTag = await channel.consume(queueName, async (msg) => {
-      if (msg === null) {
-        logger.warn(`Consumer ${queueName} cancelled by server`);
-        return;
-      }
-      logger.info(`📥 Message received from ${queueName}`);
-      try {
-        const data = JSON.parse(msg.content.toString());
-        await callback(data);
-        channel.ack(msg);
-        logger.info(`✅ Message acknowledged for ${queueName}`);
-      } catch (err) {
-        logger.error(`Consumer ${queueName} error:`, err.message);
-        logger.error('Full error:', err);
-        channel.nack(msg, false, true);
-      }
-    }, { noAck: false });
-    logger.info(`Consumer started: ${queueName} (tag: ${consumerTag.consumerTag})`);
+    logger.info(`Consumer started: ${queueName} (tag: ${consumerInfo.consumerTag})`);
   } catch (error) {
-    logger.error('Subscribe error:', error.message);
+    logger.error(`Subscribe error for ${queueName}:`, error.message);
   }
 }
 
-export { channel, connection };
+export { publishChannel, consumeChannel, connection };

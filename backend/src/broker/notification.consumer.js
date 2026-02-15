@@ -39,8 +39,10 @@ const footerSignature = `
 `;
 
 const send = async (data, { subject, title, body, text }) => {
+  logger.info('📨 Attempting to send email:', { email: data?.email, subject });
+  
   if (!data?.email) {
-    logger.warn('Email skipped: no recipient email in payload', data);
+    logger.warn('⚠️ Email skipped: no recipient email in payload', JSON.stringify(data));
     return;
   }
 
