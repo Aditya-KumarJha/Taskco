@@ -28,19 +28,16 @@ import { get } from 'mongoose';
 
 const router = Router();
 
-// Registration Flow
 router.post('/register', registerUserValidations, registerUser);
 
 router.post('/verify-register-otp', verifyOTPValidations, verifyRegisterOTP);
 
 router.post('/resend-otp', resendOTPValidations, resendOTP);
 
-// Login Flow
 router.post('/login', loginUserValidations, loginUser);
 
 router.post('/verify-login-otp', verifyLoginOTPValidations, verifyLoginOTP);
 
-// Forgot Password Flow
 router.post('/forgot-password', forgotPasswordValidations, forgotPassword);
 
 router.post('/verify-forgot-password-otp', verifyForgotPasswordOTPValidations, verifyForgotPasswordOTP);
@@ -117,10 +114,8 @@ router.get('/oauth-failure', (req, res) => {
   return res.redirect(`${frontend}/login?error=${encodeURIComponent(message)}`);
 });
 
-// Logout
 router.post('/logout', logout);
 
-// Get Current User
 router.get('/me', authMiddleware, getCurrentUser);
 
 export default router;

@@ -46,7 +46,7 @@ const NavBar = () => {
   const [lastScrollY, setLastScrollY] = useState(0);
 
   const { unreadCount } = useSelector((state) => state.notifications);
-  const { isAuthenticated } = useSelector((state) => state.auth);
+  const { isAuthenticated, user } = useSelector((state) => state.auth);
 
   const toggleAudioIndicator = () => {
     setIsAudioPlaying((prev) => !prev);
@@ -123,28 +123,32 @@ const NavBar = () => {
           </div>
 
           <div className="flex items-center">
-            <div className="hidden md:flex items-center gap-6">
-              {navItems.map(({ label, path, icon: Icon, showBadge }) => (
-                <Link
-                  key={label}
-                  to={path}
-                  className="nav-hover-btn text-black flex items-center gap-2 relative"
-                >
-                  <Icon size={18} />
-                  <span>{label}</span>
-                  {showBadge && unreadCount > 0 && (
-                    <span className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
-                      {unreadCount > 9 ? "9+" : unreadCount}
-                    </span>
-                  )}
-                </Link>
-              ))}
-            </div>
+            {/* Hide right-side nav options for admin users (left side remains) */}
+            {user?.role === 'admin' ? null : (
+              <div className="hidden md:flex items-center gap-6">
+                {navItems.map(({ label, path, icon: Icon, showBadge }) => (
+                  <Link
+                    key={label}
+                    to={path}
+                    className="nav-hover-btn text-black flex items-center gap-2 relative"
+                  >
+                    <Icon size={18} />
+                    <span>{label}</span>
+                    {showBadge && unreadCount > 0 && (
+                      <span className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+                        {unreadCount > 9 ? "9+" : unreadCount}
+                      </span>
+                    )}
+                  </Link>
+                ))}
+              </div>
+            )}
 
-            <button
-              onClick={toggleAudioIndicator}
-              className="ml-6 hidden md:flex items-center space-x-1 scale-150"
-            >
+            {user?.role !== 'admin' && (
+              <button
+                onClick={toggleAudioIndicator}
+                className="ml-6 hidden md:flex items-center space-x-1 scale-150"
+              >
               <audio
                 ref={audioElementRef}
                 className="hidden"
@@ -160,7 +164,8 @@ const NavBar = () => {
                   style={{ animationDelay: `${bar * 0.1}s` }}
                 />
               ))}
-            </button>
+              </button>
+            )}
 
             <button
               onClick={() => setIsMobileMenuOpen((prev) => !prev)}

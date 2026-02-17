@@ -11,10 +11,8 @@ const router = Router();
 
 router.use(authMiddleware);
 
-// Protected: Get current user's profile
 router.get('/', getProfile);
 
-// Protected: Update current user's profile
 router.patch('/', singleAvatar, normalizeFullName, updateProfileValidation, updateProfile);
 
 export default router;

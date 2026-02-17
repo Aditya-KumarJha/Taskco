@@ -138,7 +138,6 @@ export const deleteUser = asyncHandler(async (req, res) => {
 
   await User.findByIdAndDelete(id);
   
-  // Invalidate admin stats cache
   await invalidateAdminCache();
 
   res.json({
@@ -157,7 +156,6 @@ export const deleteTask = asyncHandler(async (req, res) => {
 
   await Task.findByIdAndDelete(id);
   
-  // Invalidate admin stats cache
   await invalidateAdminCache();
 
   res.json({
@@ -186,7 +184,6 @@ export const updateUserRole = asyncHandler(async (req, res) => {
   user.role = role;
   await user.save();
   
-  // Invalidate admin stats cache
   await invalidateAdminCache();
 
   res.json({
@@ -203,7 +200,6 @@ export const updateUserRole = asyncHandler(async (req, res) => {
 export const getAdminStats = asyncHandler(async (req, res) => {
   const cacheKey = 'admin:stats';
   
-  // Check cache first (stats are expensive to compute)
   const cached = await getCache(cacheKey);
   if (cached) {
     return res.json({
@@ -308,7 +304,6 @@ export const getAdminStats = asyncHandler(async (req, res) => {
     topUsers,
   };
   
-  // Cache stats for 10 minutes (they don't change frequently)
   await setCache(cacheKey, statsData, TTL.SHORT * 2);
 
   res.json({
@@ -328,7 +323,6 @@ export const toggleUserVerification = asyncHandler(async (req, res) => {
   user.isVerified = !user.isVerified;
   await user.save();
   
-  // Invalidate admin stats cache
   await invalidateAdminCache();
 
   res.json({
@@ -359,7 +353,6 @@ export const bulkDeleteUsers = asyncHandler(async (req, res) => {
 
   const result = await User.deleteMany({ _id: { $in: userIds } });
   
-  // Invalidate admin stats cache
   await invalidateAdminCache();
 
   res.json({
@@ -380,7 +373,6 @@ export const bulkDeleteTasks = asyncHandler(async (req, res) => {
 
   const result = await Task.deleteMany({ _id: { $in: taskIds } });
   
-  // Invalidate admin stats cache
   await invalidateAdminCache();
 
   res.json({

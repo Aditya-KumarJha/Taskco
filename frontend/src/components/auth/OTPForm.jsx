@@ -90,7 +90,9 @@ const OtpForm = ({ email, context, onVerified }) => {
         }
       } else {
         dispatch(setAuthenticated());
-        await dispatch(verifySession());
+        
+        const sessionResult = await dispatch(verifySession());
+        const userData = sessionResult.payload?.user || sessionResult.payload;
 
         if (context === 'register') {
           toast.success('Signup successful! Welcome to Taskco');
@@ -98,7 +100,11 @@ const OtpForm = ({ email, context, onVerified }) => {
           toast.success('Login successful! Welcome back');
         }
 
-        navigate("/");
+        if (userData && userData.role === 'admin') {
+          navigate("/admin/dashboard", { replace: true });
+        } else {
+          navigate("/dashboard", { replace: true });
+        }
       }
     } catch (err) {
       const msg = err.response?.data?.message || "OTP verification failed.";
