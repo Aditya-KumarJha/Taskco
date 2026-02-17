@@ -7,6 +7,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { generalLimiter } from './middlewares/rateLimiter.js';
 import { errorHandler, notFound } from './middlewares/errorHandler.js';
+import { sanitize } from './middlewares/sanitize.js';
 import routes from './routes/index.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -43,6 +44,9 @@ app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 app.use(cookieParser());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Security: Sanitize input to prevent XSS and NoSQL injection
+app.use(sanitize);
 
 app.use(generalLimiter);
 

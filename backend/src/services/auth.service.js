@@ -32,6 +32,7 @@ export const registerUser = async ({ email, password, fullName, username, provid
   }
   const hashedPassword = provider === 'email' ? await hashPassword(password) : undefined;
   const otpData = generateOTP();
+  console.log('Generated OTP for registration:', otpData.code, 'expires at', otpData.expiresAt);
   const user = await userModel.create({
     email,
     password: hashedPassword,
@@ -66,6 +67,7 @@ export const resendOTPUser = async (email, username) => {
   if (!user) throw NotFound('User not found');
   if (user.isVerified) throw Unauthorized('User is already verified');
   const otpData = generateOTP();
+  console.log('Generated OTP for resend:', otpData.code, 'expires at', otpData.expiresAt);
   user.otp = otpData;
   await user.save();
   return { user, otpData };
@@ -80,6 +82,7 @@ export const loginUser = async (emailOrUsername, password) => {
   const valid = await verifyPassword(password, user.password);
   if (!valid) throw Unauthorized('Invalid password');
   const otpData = generateOTP();
+  console.log('Generated OTP for login:', otpData.code, 'expires at', otpData.expiresAt);
   user.otp = otpData;
   await user.save();
   return { user, otpData };
@@ -105,6 +108,7 @@ export const forgotPasswordUser = async (emailOrUsername) => {
     throw Unauthorized(`Password reset not available for ${user.provider} accounts. Use ${user.provider} sign-in.`);
   }
   const otpData = generateOTP();
+  console.log('Generated OTP for forgot password:', otpData.code, 'expires at', otpData.expiresAt);
   user.otp = otpData;
   await user.save();
   return { user, otpData };
@@ -140,6 +144,7 @@ export const getProfileUser = (user) => ({
   profilePic: user.profilePic,
   provider: user.provider,
   isVerified: user.isVerified,
+  role: user.role,
 });
 
 export const updateProfileUser = async (userId, payload) => {

@@ -10,6 +10,19 @@ const SALT_ROUNDS = 12;
 
 const sampleUsers = [
   {
+    email: 'admin@taskco.com',
+    username: 'admin',
+    password: 'Admin@123456',
+    fullName: {
+      firstName: 'Admin',
+      lastName: 'User',
+    },
+    provider: 'email',
+    isVerified: true,
+    role: 'admin',
+    profilePic: 'https://i.pravatar.cc/150?img=68',
+  },
+  {
     email: 'john.doe@example.com',
     username: 'johndoe',
     password: 'Password123',
@@ -327,13 +340,20 @@ const seedDatabase = async () => {
     const userIds = createdUsers.map((user) => user._id);
     logger.info(`✅ Created ${createdUsers.length} users`);
 
-    logger.info('\n📋 Test User Credentials:');
-    sampleUsers.forEach((user, index) => {
-      if (user.provider === 'email') {
-        logger.info(`   Email: ${user.email} | Password: Password123`);
+    logger.info('\n' + '='.repeat(80));
+    logger.info('📋 TEST USER CREDENTIALS & IDs');
+    logger.info('='.repeat(80));
+    createdUsers.forEach((user, index) => {
+      const originalUser = sampleUsers[index];
+      logger.info(`\n${index + 1}. ${user.fullName.firstName} ${user.fullName.lastName} ${user.role === 'admin' ? '(ADMIN)' : ''}`);
+      logger.info(`   User ID: ${user._id}`);
+      logger.info(`   Email: ${user.email}`);
+      if (originalUser.provider === 'email') {
+        logger.info(`   Password: ${originalUser.password}`);
       } else {
-        logger.info(`   ${user.provider}: ${user.email} (OAuth user)`);
+        logger.info(`   Provider: ${originalUser.provider} (OAuth user)`);
       }
+      logger.info(`   Username: ${user.username}`);
     });
 
     logger.info('\n📝 Seeding tasks...');
@@ -342,10 +362,30 @@ const seedDatabase = async () => {
     const taskIds = createdTasks.map((task) => task._id);
     logger.info(`✅ Created ${createdTasks.length} tasks`);
 
+    logger.info('\n' + '='.repeat(80));
+    logger.info('📝 SAMPLE TASK IDs (First 5 tasks)');
+    logger.info('='.repeat(80));
+    createdTasks.slice(0, 5).forEach((task, index) => {
+      logger.info(`${index + 1}. "${task.title}"`);
+      logger.info(`   Task ID: ${task._id}`);
+      logger.info(`   Status: ${task.status} | Priority: ${task.priority}`);
+      logger.info(`   Created by: ${task.createdBy}`);
+    });
+
     logger.info('🔔 Seeding notifications...');
     const notificationsToCreate = sampleNotifications(userIds, taskIds);
     const createdNotifications = await Notification.insertMany(notificationsToCreate);
     logger.info(`✅ Created ${createdNotifications.length} notifications`);
+
+    logger.info('\n' + '='.repeat(80));
+    logger.info('🔔 SAMPLE NOTIFICATION IDs (First 3 notifications)');
+    logger.info('='.repeat(80));
+    createdNotifications.slice(0, 3).forEach((notif, index) => {
+      logger.info(`${index + 1}. ${notif.title}`);
+      logger.info(`   Notification ID: ${notif._id}`);
+      logger.info(`   Type: ${notif.type} | Read: ${notif.read}`);
+      logger.info(`   User ID: ${notif.userId}`);
+    });
 
     logger.info('\n📊 Seeding Summary:');
     logger.info(`   👥 Users: ${createdUsers.length}`);
@@ -370,8 +410,18 @@ const seedDatabase = async () => {
     logger.info(`   🟡 Medium: ${mediumPriority}`);
     logger.info(`   🟢 Low: ${lowPriority}`);
 
-    logger.info('\n🎉 Database seeding completed successfully!');
-    logger.info('\n💡 You can now login with any of the test users above.');
+    logger.info('\n' + '='.repeat(80));
+    logger.info('🎉 DATABASE SEEDING COMPLETED SUCCESSFULLY!');
+    logger.info('='.repeat(80));
+    
+    logger.info('\n💡 QUICK START GUIDE:');
+    logger.info('   1. Login with admin user to get JWT token:');
+    logger.info('      POST /api/auth/login');
+    logger.info(`      Body: { "email": "${createdUsers[0].email}", "password": "Admin@123456" }`);
+    logger.info('\n   2. Use the JWT token in Authorization header for protected routes:');
+    logger.info('      Authorization: Bearer <your_jwt_token>');
+    logger.info('\n   3. See POSTMAN.md for complete API documentation with examples');
+    logger.info('\n' + '='.repeat(80));
     
     process.exit(0);
   } catch (error) {

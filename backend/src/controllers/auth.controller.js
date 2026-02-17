@@ -12,6 +12,8 @@ import {
 } from '../services/auth.service.js';
 import { publishToQueue } from '../broker/broker.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
+import { createSession, blacklistToken, revokeAllUserSessions } from '../utils/session.js';
+
 const setTokenCookie = (res, token) => {
   const isProduction = process.env.NODE_ENV === 'production';
   res.cookie('token', token, {
@@ -53,6 +55,13 @@ export const verifyRegisterOTP = asyncHandler(async (req, res) => {
   const user = await verifyRegisterOTPService(email, otp);
   const token = generateToken(user._id, user.email, user.username);
   setTokenCookie(res, token);
+  
+  await createSession(user._id.toString(), token, {
+    device: req.headers['user-agent'] || 'unknown',
+    ip: req.ip || req.connection.remoteAddress,
+    loginMethod: 'email-verification',
+  });
+  
   await publishToQueue('AUTH_NOTIFICATION.WELCOME_USER', {
     email: user.email,
     fullName: user.fullName,
@@ -93,10 +102,14 @@ export const loginUser = asyncHandler(async (req, res) => {
     username: user.username,
     otpCode: otpData.code,
   });
-  return res.status(200).json({
+  
+  const response = {
     success: true,
     message: 'OTP sent to your email. Please verify to complete login.',
-  });
+    data: process.env.NODE_ENV === 'test' ? { otp: otpData.code } : {},
+  };
+  
+  return res.status(200).json(response);
 });
 
 export const verifyLoginOTP = asyncHandler(async (req, res) => {
@@ -105,6 +118,13 @@ export const verifyLoginOTP = asyncHandler(async (req, res) => {
   const user = await verifyLoginOTPUser(identifier, otp);
   const token = generateToken(user._id, user.email, user.username);
   setTokenCookie(res, token);
+  
+  await createSession(user._id.toString(), token, {
+    device: req.headers['user-agent'] || 'unknown',
+    ip: req.ip || req.connection.remoteAddress,
+    loginMethod: 'otp-login',
+  });
+  
   await publishToQueue('AUTH_NOTIFICATION.LOGIN_SUCCESS', {
     email: user.email,
     fullName: user.fullName,
@@ -113,7 +133,10 @@ export const verifyLoginOTP = asyncHandler(async (req, res) => {
   return res.status(200).json({
     success: true,
     message: 'Login successful',
-    user: getProfileUser(user),
+    data: {
+      user: getProfileUser(user),
+      accessToken: token,
+    },
   });
 });
 
@@ -149,6 +172,9 @@ export const resetPassword = asyncHandler(async (req, res) => {
   const { email, username, newPassword } = req.body;
   const identifier = email || username;
   const user = await resetPasswordUser(identifier, newPassword);
+  
+  await revokeAllUserSessions(user._id.toString());
+  
   await publishToQueue('AUTH_NOTIFICATION.PASSWORD_UPDATED', {
     email: user.email,
     fullName: user.fullName,
@@ -167,6 +193,14 @@ export const oauthCallback = (provider) =>
     const isNewUser = req.authInfo?.isNewUser === true;
     const token = generateToken(user._id, user.email, user.username);
     setTokenCookie(res, token);
+    
+    await createSession(user._id.toString(), token, {
+      device: req.headers['user-agent'] || 'unknown',
+      ip: req.ip || req.connection.remoteAddress,
+      loginMethod: `oauth-${provider}`,
+      isNewUser,
+    });
+    
     if (isNewUser) {
       await publishToQueue('AUTH_NOTIFICATION.OAUTH_WELCOME', {
         email: user.email,
@@ -187,6 +221,12 @@ export const oauthCallback = (provider) =>
 
 export const logout = asyncHandler(async (req, res) => {
   const isProduction = process.env.NODE_ENV === 'production';
+  
+  const token = req.token || req.headers.authorization?.slice(7) || req.cookies?.token;
+  if (token) {
+    await blacklistToken(token);
+  }
+  
   res.clearCookie('token', {
     httpOnly: true,
     secure: isProduction,

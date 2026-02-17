@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/user.model.js';
-import { Unauthorized } from '../utils/ApiError.js';
+import { Unauthorized, Forbidden } from '../utils/ApiError.js';
+import { validateSession } from '../utils/session.js';
 
 export const protect = async (req, res, next) => {
   try {
@@ -16,13 +17,22 @@ export const protect = async (req, res, next) => {
     if (!token) {
       throw Unauthorized('Access token required. Please log in.');
     }
+    
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    
+    const isValid = await validateSession(token);
+    if (!isValid) {
+      throw Unauthorized('Session expired or invalid. Please log in again.');
+    }
+    
     const userId = decoded.id || decoded.sub;
     const user = await User.findById(userId).select('-password');
     if (!user) {
       throw Unauthorized('User not found. Token may be invalid.');
     }
+    
     req.user = user;
+    req.token = token; 
     next();
   } catch (err) {
     if (err.name === 'JsonWebTokenError') {
@@ -77,6 +87,20 @@ export const refreshAuth = async (req, res, next) => {
     if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
       return next(Unauthorized('Invalid or expired refresh token.'));
     }
+    next(err);
+  }
+};
+
+export const adminOnly = async (req, res, next) => {
+  try {
+    if (!req.user) {
+      throw Unauthorized('Authentication required. Please log in.');
+    }
+    if (req.user.role !== 'admin') {
+      throw Forbidden('Access denied. Admin privileges required.');
+    }
+    next();
+  } catch (err) {
     next(err);
   }
 };

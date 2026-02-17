@@ -3,13 +3,30 @@ import { uploadImage } from '../services/imagekit.service.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { NotFound } from '../utils/ApiError.js';
 import User from '../models/user.model.js';
+import { getCache, setCache, deleteCache, generateKey, TTL } from '../utils/cache.js';
 
 export const getProfile = asyncHandler(async (req, res) => {
+  const cacheKey = generateKey('profile', req.user._id);
+  
+  const cached = await getCache(cacheKey);
+  if (cached) {
+    return res.json({
+      success: true,
+      data: { user: cached },
+      cached: true,
+    });
+  }
+  
   const user = await User.findById(req.user._id).select('-password');
   if (!user) throw NotFound('User not found');
+  
+  const profileData = getProfileUser(user);
+  
+  await setCache(cacheKey, profileData, TTL.MEDIUM);
+  
   return res.json({
     success: true,
-    data: { user: getProfileUser(user) },
+    data: { user: profileData },
   });
 });
 
@@ -40,6 +57,9 @@ export const updateProfile = asyncHandler(async (req, res) => {
   }
 
   const user = await updateProfileUser(userId, payload);
+  
+  const cacheKey = generateKey('profile', userId);
+  await deleteCache(cacheKey);
 
   return res.json({
     success: true,
