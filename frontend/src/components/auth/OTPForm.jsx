@@ -195,6 +195,10 @@ const OtpForm = ({ email, context, onVerified }) => {
         Enter the 6-digit OTP sent to <strong>{email}</strong>
       </p>
 
+      <p className="text-xs text-center text-gray-500 mb-4">
+        If you don't see the email, please check your spam/junk folder.
+      </p>
+
         {remainingTime > 0 ? (
         <p className="text-xs text-center text-gray-500 mb-4">
           OTP is valid for{" "}
