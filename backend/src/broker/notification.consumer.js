@@ -2,6 +2,8 @@ import { subscribeToQueue } from './broker.js';
 import { sendEmail } from '../services/email.service.js';
 import { logger } from '../utils/logger.js';
 
+let consumersStarted = false;
+
 const getCustomerName = (data = {}) => {
   if (data.fullName && typeof data.fullName === 'object') {
     const first = data.fullName.firstName || '';
@@ -65,8 +67,15 @@ const send = async (data, { subject, title, body, text }) => {
 };
 
 export async function startNotificationConsumers() {
-  const register = (queue, handler) => {
-    subscribeToQueue(queue, async (data) => {
+  if (consumersStarted) {
+    logger.info('Notification consumers already started');
+    return;
+  }
+
+  consumersStarted = true;
+
+  const register = async (queue, handler) => {
+    await subscribeToQueue(queue, async (data) => {
       await handler(data);
     });
   };

@@ -62,10 +62,9 @@ export async function subscribeToQueue(queueName, callback) {
     return;
   }
   try {
-    const q = await consumeChannel.assertQueue(queueName, { durable: true });
-    logger.info(`Queue ${queueName} has ${q.messageCount} messages waiting`);
+    await consumeChannel.assertQueue(queueName, { durable: true });
     
-    const consumerInfo = await consumeChannel.consume(
+    await consumeChannel.consume(
       queueName,
       async (msg) => {
         if (msg === null) {
@@ -88,11 +87,10 @@ export async function subscribeToQueue(queueName, callback) {
       },
       { 
         noAck: false,
-        consumerTag: `taskco-${queueName}-${Date.now()}`
       }
     );
     
-    logger.info(`Consumer started: ${queueName} (tag: ${consumerInfo.consumerTag})`);
+    logger.info(`Consumer started: ${queueName}`);
   } catch (error) {
     logger.error(`Subscribe error for ${queueName}:`, error.message);
   }
